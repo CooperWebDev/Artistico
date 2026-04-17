@@ -162,8 +162,8 @@ CREATE POLICY "Users can delete their own wallpaper images"
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO user_profiles (id, email, is_verified)
-  VALUES (NEW.id, NEW.email, TRUE);
+  INSERT INTO user_profiles (id, email, username, is_verified)
+  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'username', TRUE);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
