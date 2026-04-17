@@ -1165,6 +1165,33 @@ body.dark-mode .user-menu .menu-item.text-danger:hover {
 }
 
 /* ========================================
+   LOADING AND EMPTY STATES
+======================================== */
+.loading-state,
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.loading-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+  color: #9ca3af;
+}
+
+body.dark-mode .loading-state p,
+body.dark-mode .empty-state p {
+  color: #9ca3af;
+}
+
+/* ========================================
    RESPONSIVE DESIGN FOR NEW COMPONENTS
 ======================================== */
 @media (max-width: 640px) {

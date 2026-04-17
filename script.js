@@ -1,8 +1,15 @@
-document.addEventListener('DOMContentLoaded', function() {
+// Wait for Supabase to load, then initialize
+function initializeApp() {
+  if (typeof supabase === 'undefined') {
+    // Retry after a short delay
+    setTimeout(initializeApp, 100);
+    return;
+  }
+
   // Supabase setup - Replace with your actual keys
   const supabaseUrl = 'https://lkjfkbififhwgvamffir.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxramZrYmlmaWZod2d2YW1mZmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTE4OTcsImV4cCI6MjA5MTk4Nzg5N30.96SQDKM-AQ_CIyXTQsv3CG9etJDqnexEMADqWnQDTyw';
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
   // Backend URL - change this when deploying
   // Backend URL configuration
@@ -13,38 +20,107 @@ document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('search-input');
   const searchBtn = document.getElementById('search-btn');
   const chips = document.querySelectorAll('.chip');
-  let cards = document.querySelectorAll('.photo-card');
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   const filterBtn = document.querySelector('.icon-action[title="Reset filter"]');
+  const galleryGrid = document.getElementById('wallpapers');
+  const loadingState = document.getElementById('loading-wallpapers');
+  const emptyState = document.getElementById('no-wallpapers');
 
   let activeFilter = 'all';
   let currentEmail = null;
   let currentFullName = null;
+  let allWallpapers = []; // Store all wallpapers for filtering
 
-  function filterCards(query, category) {
+  // ============ LOAD WALLPAPERS FROM SUPABASE ============
+  async function loadWallpapers() {
+    try {
+      loadingState.style.display = 'block';
+      emptyState.style.display = 'none';
+
+      const { data: wallpapers, error } = await supabaseClient
+        .from('wallpapers')
+        .select('*')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      allWallpapers = wallpapers || [];
+      displayWallpapers(allWallpapers);
+
+    } catch (error) {
+      console.error('Error loading wallpapers:', error);
+      loadingState.innerHTML = '<p>Error loading wallpapers. Please try again.</p>';
+    } finally {
+      loadingState.style.display = 'none';
+    }
+  }
+
+  // ============ DISPLAY WALLPAPERS ============
+  function displayWallpapers(wallpapers) {
+    // Clear existing wallpapers (keep loading/empty states)
+    const existingCards = galleryGrid.querySelectorAll('.photo-card');
+    existingCards.forEach(card => card.remove());
+
+    if (wallpapers.length === 0) {
+      emptyState.style.display = 'block';
+      return;
+    }
+
+    emptyState.style.display = 'none';
+
+    wallpapers.forEach(wallpaper => {
+      const card = createWallpaperCard(wallpaper);
+      galleryGrid.appendChild(card);
+    });
+  }
+
+  // ============ CREATE WALLPAPER CARD ============
+  function createWallpaperCard(wallpaper) {
+    const card = document.createElement('article');
+    card.className = 'photo-card';
+    card.dataset.tags = (wallpaper.tags || []).join(' ') + ' ' + (wallpaper.category || 'fanart');
+
+    const img = document.createElement('img');
+    img.src = wallpaper.image_url;
+    img.alt = wallpaper.title;
+    img.loading = 'lazy';
+
+    card.appendChild(img);
+    return card;
+  }
+
+  // ============ FILTER WALLPAPERS ============
+  function filterWallpapers(query, category) {
     const searchTerm = query.toLowerCase().trim();
 
-    cards.forEach(card => {
-      const tags = card.dataset.tags.toLowerCase();
-      const title = card.querySelector('img').alt.toLowerCase();
+    const filteredWallpapers = allWallpapers.filter(wallpaper => {
+      const tags = ((wallpaper.tags || []).join(' ') + ' ' + (wallpaper.category || 'fanart')).toLowerCase();
+      const title = (wallpaper.title || '').toLowerCase();
+      const description = (wallpaper.description || '').toLowerCase();
 
       const matchesCategory = category === 'all' || tags.includes(category);
-      const matchesSearch = searchTerm === '' || title.includes(searchTerm) || tags.includes(searchTerm);
+      const matchesSearch = searchTerm === '' ||
+        title.includes(searchTerm) ||
+        description.includes(searchTerm) ||
+        tags.includes(searchTerm);
 
-      card.style.display = matchesCategory && matchesSearch ? 'block' : 'none';
+      return matchesCategory && matchesSearch;
     });
+
+    displayWallpapers(filteredWallpapers);
   }
 
   function setActiveChip(selectedChip) {
     chips.forEach(chip => chip.classList.remove('active'));
     selectedChip.classList.add('active');
     activeFilter = selectedChip.dataset.filter || 'all';
-    filterCards(searchInput.value, activeFilter);
+    filterWallpapers(searchInput.value, activeFilter);
   }
 
   // ============ AUTH STATE MANAGEMENT ============
   async function checkAuthStatus() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
 
     if (session) {
       await displayUserMenu(session.user);
@@ -64,18 +140,21 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('login-btn').classList.add('hidden');
     document.getElementById('user-menu').classList.remove('hidden');
     
-    const { data } = await supabase
+    const { data } = await supabaseClient
       .from('user_profiles')
       .select('*')
       .eq('id', user.id)
       .single();
     
     if (data) {
-      document.getElementById('user-name').textContent = data.username || user.email;
+      document.getElementById('user-name').textContent = data.username || data.email || user.email;
       document.getElementById('user-email').textContent = user.email;
       if (data.avatar_url) {
         document.getElementById('user-avatar').src = data.avatar_url;
       }
+    } else {
+      document.getElementById('user-name').textContent = user.email;
+      document.getElementById('user-email').textContent = user.email;
     }
   }
 
@@ -87,17 +166,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (searchBtn) {
     searchBtn.addEventListener('click', function() {
-      filterCards(searchInput.value, activeFilter);
+      filterWallpapers(searchInput.value, activeFilter);
     });
   }
 
   if (searchInput) {
     searchInput.addEventListener('input', function() {
-      filterCards(this.value, activeFilter);
+      filterWallpapers(this.value, activeFilter);
     });
     searchInput.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        filterCards(this.value, activeFilter);
+        filterWallpapers(this.value, activeFilter);
       }
     });
   }
@@ -184,6 +263,8 @@ document.addEventListener('DOMContentLoaded', function() {
       displayAuthButtons();
     }
   });
+
+  // ============ LOGIN FORM ============
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -252,14 +333,6 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.classList.add('hidden');
       }
     });
-  });
-
-  // ============ LOGOUT ============
-  document.getElementById('logout-btn').addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    document.getElementById('user-menu').classList.add('hidden');
-    displayAuthButtons();
-    window.location.href = '#home';
   });
 
   // ============ USER MENU TOGGLE ============
@@ -332,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
   uploadForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
       alert('You must be logged in to upload');
       return;
@@ -353,19 +426,19 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       // Upload image to storage
       const filePath = `${user.id}/${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseClient.storage
         .from('wallpapers')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      const { data: { publicUrl } } = supabaseClient.storage
         .from('wallpapers')
         .getPublicUrl(filePath);
 
       // Save wallpaper metadata
-      const { error: dbError } = await supabase
+      const { error: dbError } = await supabaseClient
         .from('wallpapers')
         .insert({
           user_id: user.id,
@@ -383,6 +456,9 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('upload-modal').classList.add('hidden');
       uploadForm.reset();
       uploadPreview.classList.add('hidden');
+
+      // Refresh the wallpaper gallery
+      loadWallpapers();
 
     } catch (error) {
       alert('Upload error: ' + error.message);
@@ -424,5 +500,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initialize
   checkAuthStatus();
-  filterCards('', 'all');
+  loadWallpapers();
+}
+
+// Start the app when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  initializeApp();
 });
