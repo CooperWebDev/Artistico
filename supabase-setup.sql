@@ -8,8 +8,8 @@ CREATE TABLE user_profiles (
   username TEXT UNIQUE,
   avatar_url TEXT,
   bio TEXT,
-  is_verified BOOLEAN DEFAULT FALSE,
-  verified_at TIMESTAMP,
+  is_verified BOOLEAN DEFAULT TRUE,
+  verified_at TIMESTAMP DEFAULT NOW(),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -28,17 +28,6 @@ CREATE TABLE wallpapers (
   is_public BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Verification tokens table
-CREATE TABLE verification_tokens (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT NOT NULL,
-  token TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
-  expires_at TIMESTAMP NOT NULL,
-  used BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Create storage bucket for wallpapers
@@ -81,11 +70,6 @@ CREATE POLICY "Users can update their own profile"
 CREATE POLICY "Users can insert their own profile"
   ON user_profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
-
--- Verification tokens policies (only backend can access)
-CREATE POLICY "Backend can manage verification tokens"
-  ON verification_tokens FOR ALL
-  USING (auth.role() = 'service_role');
 
 -- Storage policies for wallpapers bucket
 CREATE POLICY "Anyone can view wallpaper images"

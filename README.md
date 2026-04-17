@@ -4,7 +4,7 @@ A modern, full-featured anime wallpaper gallery with user authentication, image 
 
 ## Features
 
-- 🔐 **User Authentication**: Email verification with random password generation
+- 🔐 **Simple Authentication**: Direct sign up/sign in with email and password
 - 📤 **Image Uploads**: Drag-and-drop upload with metadata
 - 🎨 **Professional UI**: Modern design with dark mode support
 - 🔍 **Search & Filter**: Advanced filtering by categories and tags
@@ -39,8 +39,8 @@ A modern, full-featured anime wallpaper gallery with user authentication, image 
    ```env
    SUPABASE_URL=https://your-project.supabase.co
    SUPABASE_ANON_KEY=your-anon-key
-   EMAIL_USER=your-gmail@gmail.com
-   EMAIL_PASS=your-gmail-app-password
+   SENDGRID_API_KEY=your-sendgrid-api-key
+   FROM_EMAIL=noreply@yourdomain.com
    FRONTEND_URL=http://localhost:8000
    ```
 
@@ -85,8 +85,8 @@ A modern, full-featured anime wallpaper gallery with user authentication, image 
    ```
    SUPABASE_URL=https://your-project.supabase.co
    SUPABASE_ANON_KEY=your-anon-key
-   EMAIL_USER=your-gmail@gmail.com
-   EMAIL_PASS=your-gmail-app-password
+   SENDGRID_API_KEY=your-sendgrid-api-key
+   FROM_EMAIL=noreply@yourdomain.com
    FRONTEND_URL=https://your-frontend-app.onrender.com
    ```
 5. **Deploy**
@@ -180,18 +180,32 @@ CREATE POLICY "Users can delete their own wallpapers"
   USING (auth.uid() = user_id);
 ```
 
-## Email Configuration
+## Email Service Setup
 
-For Gmail:
-1. Enable 2-factor authentication
-2. Generate an App Password
-3. Use your Gmail address as EMAIL_USER
-4. Use the App Password as EMAIL_PASS
+For production email sending, we recommend using SendGrid (free tier available):
+
+1. **Sign up for SendGrid**: https://sendgrid.com
+2. **Create an API key** in your SendGrid dashboard
+3. **Verify your sender email** in SendGrid
+4. **Add to environment variables**:
+   ```
+   SENDGRID_API_KEY=your-sendgrid-api-key-here
+   ```
+
+### Alternative Email Services
+
+You can also use:
+- **Mailgun**: `MAILGUN_API_KEY` and `MAILGUN_DOMAIN`
+- **AWS SES**: `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+- **Resend**: `RESEND_API_KEY`
+
+The code is configured for SendGrid by default, but can be easily adapted for other services.
 
 ## API Endpoints
 
-- `POST /api/send-verification-email` - Send verification email
-- `GET /api/verify-email` - Verify email and create account
+- `POST /api/signup` - Create new user account
+- `POST /api/signin` - Sign in existing user
+- `POST /api/signout` - Sign out user
 - `GET /api/health` - Health check
 
 ## File Structure

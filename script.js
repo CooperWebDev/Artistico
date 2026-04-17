@@ -45,17 +45,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // ============ AUTH STATE MANAGEMENT ============
   async function checkAuthStatus() {
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (session) {
       await displayUserMenu(session.user);
     } else {
       displayAuthButtons();
-    }
-    
-    // Check for verification token in URL
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('token') && params.get('email')) {
-      await verifyEmailAndCreateAccount(params.get('email'), params.get('token'));
     }
   }
 
@@ -132,115 +126,96 @@ document.addEventListener('DOMContentLoaded', function() {
   // ============ SIGN UP FLOW ============
   document.getElementById('signup-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const email = document.getElementById('signup-email').value.trim();
-    const fullName = document.getElementById('signup-name').value.trim();
-    
-    if (!email || !fullName) {
+    const username = document.getElementById('signup-name').value.trim();
+    const password = document.getElementById('signup-password').value;
+
+    if (!email || !username || !password) {
       alert('Please fill in all fields');
       return;
     }
-    
-    currentEmail = email;
-    currentFullName = fullName;
-    
+
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return;
+    }
+
     try {
-      // Call backend for verification email
-      const response = await fetch(`${backendUrl}/api/send-verification-email`, {
+      // Call backend for signup
+      const response = await fetch(`${backendUrl}/api/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, fullName }),
+        body: JSON.stringify({ email, username, password }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) throw new Error(data.error);
-      
-      // Show verification modal
+
+      // Success - close modal and show success message
       document.getElementById('signup-modal').classList.add('hidden');
-      document.getElementById('verify-email-display').textContent = email;
-      document.getElementById('verify-email-modal').classList.remove('hidden');
-      
+      alert('Account created successfully! You can now log in.');
+
+      // Clear form
+      document.getElementById('signup-form').reset();
+
     } catch (error) {
       alert('Error: ' + error.message);
     }
   });
 
-  // ============ EMAIL VERIFICATION ============
-  async function verifyEmailAndCreateAccount(email, token) {
+  // ============ LOGOUT ============
+  document.getElementById('logout-btn').addEventListener('click', async () => {
     try {
-      // Call backend to verify email
-      const response = await fetch(`${backendUrl}/api/verify-email?token=${token}&email=${encodeURIComponent(email)}`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Verification failed');
-      }
-      
-      // Show password modal with temporary password
-      document.getElementById('verify-email-modal').classList.add('hidden');
-      document.getElementById('temp-password-display').textContent = data.password;
-      document.getElementById('password-modal').classList.remove('hidden');
-      
-    } catch (error) {
-      alert('Verification error: ' + error.message);
-    }
-  }
-
-  document.getElementById('resend-email-btn').addEventListener('click', async () => {
-    try {
-      const response = await fetch(`${backendUrl}/api/send-verification-email`, {
+      // Call backend for signout
+      await fetch(`${backendUrl}/api/signout`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: currentEmail, fullName: currentFullName }),
       });
-      
-      if (!response.ok) throw new Error('Failed to resend email');
-      
-      alert('Verification email resent! Check your inbox.');
+
+      // Update UI
+      displayAuthButtons();
+
     } catch (error) {
-      alert('Error: ' + error.message);
+      console.error('Logout error:', error);
+      // Still update UI even if backend call fails
+      displayAuthButtons();
     }
   });
-
-  document.getElementById('copy-password-btn').addEventListener('click', () => {
-    const password = document.getElementById('temp-password-display').textContent;
-    navigator.clipboard.writeText(password);
-    alert('Password copied to clipboard!');
-  });
-
-  document.getElementById('proceed-login-btn').addEventListener('click', () => {
-    document.getElementById('password-modal').classList.add('hidden');
-    document.getElementById('login-modal').classList.remove('hidden');
-    document.getElementById('login-email').value = currentEmail;
-    document.getElementById('login-email').focus();
-  });
-
-  // ============ LOGIN FLOW ============
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-    
+
+    if (!email || !password) {
+      alert('Please enter both email and password');
+      return;
+    }
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Call backend for signin
+      const response = await fetch(`${backendUrl}/api/signin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
-      
-      if (error) throw error;
-      
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error);
+
+      // Success - close modal and update UI
       document.getElementById('login-modal').classList.add('hidden');
       await displayUserMenu(data.user);
-      
+
       // Clear form
       document.getElementById('login-form').reset();
-      
+
     } catch (error) {
       alert('Login error: ' + error.message);
     }
