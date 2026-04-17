@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Backend URL configuration
   const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000'
-    : 'https://anime-walls-backend.onrender.com'; // Replace with your actual Render backend URL
+    : 'https://artistico-coyl.onrender.com';
 
   const searchInput = document.getElementById('search-input');
   const searchBtn = document.getElementById('search-btn');

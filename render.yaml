@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: anime-walls-backend
+    name: artistico-coyl
     runtime: node
     buildCommand: npm install
     startCommand: npm start
@@ -23,5 +23,5 @@ services:
       - key: BACKEND_URL
         fromService:
           type: web
-          name: anime-walls-backend
+          name: artistico-coyl
           property: host

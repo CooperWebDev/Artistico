@@ -1,5 +1,28 @@
 -- Supabase Database Setup for Anime Walls
--- Run these commands in your Supabase SQL Editor
+-- ⚠️  WARNING: This script COMPLETELY CLEARS and recreates the database!
+-- It will delete all existing data, tables, policies, and functions.
+-- Only run this if you want to start fresh!
+
+-- Drop existing tables (in reverse dependency order)
+DROP TABLE IF EXISTS verification_tokens CASCADE;
+DROP TABLE IF EXISTS wallpapers CASCADE;
+DROP TABLE IF EXISTS user_profiles CASCADE;
+
+-- Drop existing storage bucket
+DROP BUCKET IF EXISTS wallpapers;
+
+-- Drop existing triggers
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_auth_user_verified ON auth.users;
+
+-- Drop existing functions
+DROP FUNCTION IF EXISTS handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS update_user_verification() CASCADE;
+
+-- Create storage bucket
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('wallpapers', 'wallpapers', true)
+ON CONFLICT (id) DO NOTHING;
 
 -- Users table extension
 CREATE TABLE user_profiles (
@@ -30,12 +53,25 @@ CREATE TABLE wallpapers (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create storage bucket for wallpapers
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('wallpapers', 'wallpapers', true)
-ON CONFLICT (id) DO NOTHING;
-
 -- Row Level Security (RLS) Policies
+
+-- Drop ALL existing policies first
+DO $$
+DECLARE
+    pol record;
+BEGIN
+    FOR pol IN
+        SELECT schemaname, tablename, policyname
+        FROM pg_policies
+        WHERE schemaname = 'public'
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON %I.%I', pol.policyname, pol.schemaname, pol.tablename);
+    END LOOP;
+END $$;
+
+-- Enable RLS on tables
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wallpapers ENABLE ROW LEVEL SECURITY;
 
 -- Wallpapers policies
 CREATE POLICY "Anyone can view public wallpapers"
@@ -93,7 +129,7 @@ CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO user_profiles (id, email, is_verified)
-  VALUES (NEW.id, NEW.email, FALSE);
+  VALUES (NEW.id, NEW.email, TRUE);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -102,7 +138,7 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
--- Update user_profiles when email is verified
+-- Update user_profiles when email is verified (kept for compatibility)
 CREATE OR REPLACE FUNCTION update_user_verification()
 RETURNS TRIGGER AS $$
 BEGIN
