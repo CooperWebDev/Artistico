@@ -1,6 +1,6 @@
 // Wait for Supabase to load, then initialize
 function initializeApp() {
-  if (typeof supabase === 'undefined') {
+  if (typeof window.supabase === 'undefined') {
     // Retry after a short delay
     setTimeout(initializeApp, 100);
     return;
@@ -9,7 +9,7 @@ function initializeApp() {
   // Supabase setup - Replace with your actual keys
   const supabaseUrl = 'https://lkjfkbififhwgvamffir.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxramZrYmlmaWZod2d2YW1mZmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTE4OTcsImV4cCI6MjA5MTk4Nzg5N30.96SQDKM-AQ_CIyXTQsv3CG9etJDqnexEMADqWnQDTyw';
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   // Backend URL - change this when deploying
   // Backend URL configuration
