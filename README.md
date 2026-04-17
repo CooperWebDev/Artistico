@@ -64,7 +64,17 @@ A modern, full-featured anime wallpaper gallery with user authentication, image 
 
 ## Deployment to Render
 
-### 1. Backend Deployment
+### Option 1: Blueprint Deployment (Recommended)
+
+1. **Create a render.yaml file** (already created in your project)
+2. **Connect your GitHub repository** to Render
+3. **Create a new Blueprint** in Render and select your repository
+4. **Render will automatically detect the render.yaml file** and set up both services
+5. **Configure environment variables** for both services in Render's dashboard
+
+### Option 2: Manual Deployment
+
+#### Backend Deployment
 
 1. **Create a new Web Service** on Render
 2. **Connect your GitHub repository**
@@ -81,7 +91,7 @@ A modern, full-featured anime wallpaper gallery with user authentication, image 
    ```
 5. **Deploy**
 
-### 2. Frontend Deployment
+#### Frontend Deployment
 
 1. **Create a new Static Site** on Render
 2. **Connect your GitHub repository**
@@ -92,10 +102,12 @@ A modern, full-featured anime wallpaper gallery with user authentication, image 
    ```
    BACKEND_URL=https://your-backend-app.onrender.com
    ```
-5. **Update script.js:**
-   Change the `backendUrl` variable to use the deployed backend URL:
+5. **Update the backend URL in script.js:**
+   After deploying the backend, update the `backendUrl` in `script.js`:
    ```javascript
-   const backendUrl = process.env.BACKEND_URL || 'https://your-backend-app.onrender.com';
+   const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+     ? 'http://localhost:3000'
+     : 'https://your-backend-app.onrender.com'; // Replace with your actual backend URL
    ```
 
 ## Supabase Database Setup

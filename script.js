@@ -5,7 +5,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
   // Backend URL - change this when deploying
-  const backendUrl = 'http://localhost:3000';
+  // Backend URL configuration
+  const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000'
+    : 'https://anime-walls-backend.onrender.com'; // Replace with your actual Render backend URL
 
   const searchInput = document.getElementById('search-input');
   const searchBtn = document.getElementById('search-btn');
