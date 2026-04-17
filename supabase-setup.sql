@@ -1,25 +1,74 @@
--- Supabase Database Setup for Anime Walls
--- ⚠️  WARNING: This script COMPLETELY CLEARS and recreates the database!
--- It will delete all existing data, tables, policies, and functions.
--- Only run this if you want to start fresh!
+-- COMPLETE RESET: Supabase Database Setup for Anime Walls
+-- This script DROPS everything first, then recreates from scratch
 
--- Drop existing tables (in reverse dependency order)
-DROP TABLE IF EXISTS verification_tokens CASCADE;
+-- STEP 1: DROP EVERYTHING (ignore errors if objects don't exist)
+-- Drop triggers (ignore errors)
+DO $$
+BEGIN
+    EXECUTE 'DROP TRIGGER IF EXISTS on_auth_user_verified ON auth.users';
+    EXECUTE 'DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users';
+EXCEPTION WHEN OTHERS THEN
+    -- Ignore errors
+    NULL;
+END $$;
+
+-- Drop functions (ignore errors)
+DO $$
+BEGIN
+    EXECUTE 'DROP FUNCTION IF EXISTS update_user_verification()';
+    EXECUTE 'DROP FUNCTION IF EXISTS handle_new_user()';
+EXCEPTION WHEN OTHERS THEN
+    -- Ignore errors
+    NULL;
+END $$;
+
+-- Drop policies and tables (ignore all errors)
+DO $$
+DECLARE
+    policy_record RECORD;
+BEGIN
+    -- Drop all policies on user_profiles if table exists
+    FOR policy_record IN
+        SELECT schemaname, tablename, policyname
+        FROM pg_policies
+        WHERE tablename IN ('user_profiles', 'wallpapers')
+    LOOP
+        BEGIN
+            EXECUTE 'DROP POLICY IF EXISTS "' || policy_record.policyname || '" ON ' || policy_record.schemaname || '.' || policy_record.tablename;
+        EXCEPTION WHEN OTHERS THEN
+            -- Ignore errors
+            NULL;
+        END;
+    END LOOP;
+
+    -- Drop storage policies
+    FOR policy_record IN
+        SELECT schemaname, tablename, policyname
+        FROM pg_policies
+        WHERE tablename = 'objects' AND schemaname = 'storage'
+    LOOP
+        BEGIN
+            EXECUTE 'DROP POLICY IF EXISTS "' || policy_record.policyname || '" ON storage.objects';
+        EXCEPTION WHEN OTHERS THEN
+            -- Ignore errors
+            NULL;
+        END;
+    END LOOP;
+EXCEPTION WHEN OTHERS THEN
+    -- Ignore all errors
+    NULL;
+END $$;
+
+-- Drop tables (ignore errors)
 DROP TABLE IF EXISTS wallpapers CASCADE;
 DROP TABLE IF EXISTS user_profiles CASCADE;
 
--- Drop existing storage bucket
-DROP BUCKET IF EXISTS wallpapers;
+-- NOTE: Cannot directly delete storage bucket via SQL - Storage API required
+-- We'll recreate it below (it will be skipped if it already exists)
 
--- Drop existing triggers
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS on_auth_user_verified ON auth.users;
+-- STEP 2: RECREATE EVERYTHING FROM SCRATCH
 
--- Drop existing functions
-DROP FUNCTION IF EXISTS handle_new_user() CASCADE;
-DROP FUNCTION IF EXISTS update_user_verification() CASCADE;
-
--- Create storage bucket
+-- Create storage bucket (skip if already exists)
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('wallpapers', 'wallpapers', true)
 ON CONFLICT (id) DO NOTHING;
@@ -54,21 +103,6 @@ CREATE TABLE wallpapers (
 );
 
 -- Row Level Security (RLS) Policies
-
--- Drop ALL existing policies first
-DO $$
-DECLARE
-    pol record;
-BEGIN
-    FOR pol IN
-        SELECT schemaname, tablename, policyname
-        FROM pg_policies
-        WHERE schemaname = 'public'
-    LOOP
-        EXECUTE format('DROP POLICY IF EXISTS %I ON %I.%I', pol.policyname, pol.schemaname, pol.tablename);
-    END LOOP;
-END $$;
-
 -- Enable RLS on tables
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wallpapers ENABLE ROW LEVEL SECURITY;

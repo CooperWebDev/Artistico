@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files (HTML, CSS, JS)
+app.use(express.static('.'));
+
 // Supabase setup
 const supabaseUrl = process.env.SUPABASE_URL || 'https://lkjfkbififhwgvamffir.supabase.co';
 const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxramZrYmlmaWZod2d2YW1mZmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTE4OTcsImV4cCI6MjA5MTk4Nzg5N30.96SQDKM-AQ_CIyXTQsv3CG9etJDqnexEMADqWnQDTyw';
@@ -99,6 +102,11 @@ app.post('/api/signout', async (req, res) => {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Serve index.html for all non-API routes (SPA fallback)
+app.get('*', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
 });
 
 app.listen(PORT, () => {
