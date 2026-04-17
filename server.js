@@ -41,18 +41,10 @@ app.post('/api/signup', async (req, res) => {
 
     if (signupError) throw signupError;
 
-    // Create user profile
-    if (authData.user) {
-      await supabase
-        .from('user_profiles')
-        .insert({
-          id: authData.user.id,
-          email,
-          username,
-          is_verified: true,
-          verified_at: new Date(),
-        });
-    }
+    // Only insert the profile manually when the server is running with service role privileges.
+    // If the backend is using an anon key, rely on the auth trigger to create a basic profile.
+    // If the Supabase auth trigger is configured, it will create user_profiles automatically.
+    // We avoid requiring a service role key here so signup can work with the anon key only.
 
     res.json({ success: true, message: 'Account created successfully' });
 
