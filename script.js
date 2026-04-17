@@ -221,22 +221,22 @@ function initializeApp() {
     }
 
     try {
-      // Call backend for signup
-      const response = await fetch(`${backendUrl}/api/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, username, password }),
+      // Sign up directly with Supabase client
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username
+          }
+        }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error);
+      if (error) throw error;
 
       // Success - close modal and show success message
       document.getElementById('signup-modal').classList.add('hidden');
-      alert('Account created successfully! You can now log in.');
+      alert('Account created successfully! Please check your email to confirm your account.');
 
       // Clear form
       document.getElementById('signup-form').reset();
@@ -249,17 +249,16 @@ function initializeApp() {
   // ============ LOGOUT ============
   document.getElementById('logout-btn').addEventListener('click', async () => {
     try {
-      // Call backend for signout
-      await fetch(`${backendUrl}/api/signout`, {
-        method: 'POST',
-      });
+      // Sign out directly with Supabase client
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) throw error;
 
       // Update UI
       displayAuthButtons();
 
     } catch (error) {
       console.error('Logout error:', error);
-      // Still update UI even if backend call fails
+      // Still update UI even if logout fails
       displayAuthButtons();
     }
   });
@@ -277,18 +276,13 @@ function initializeApp() {
     }
 
     try {
-      // Call backend for signin
-      const response = await fetch(`${backendUrl}/api/signin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      // Sign in directly with Supabase client
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
       });
 
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error);
+      if (error) throw error;
 
       // Success - close modal and update UI
       document.getElementById('login-modal').classList.add('hidden');
