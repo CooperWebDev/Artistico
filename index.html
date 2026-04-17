@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anime Wallpaper Gallery</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-left">
+      <div class="logo">
+        <i class="fas fa-image"></i>
+        <span>Anime Walls</span>
+      </div>
+    </div>
+    <ul class="navbar-links" id="nav-links">
+      <li><a href="#home" class="active">Home</a></li>
+      <li><a href="#categories">Categories</a></li>
+      <li><a href="#wallpapers">Wallpapers</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+    <div class="navbar-auth">
+      <button id="login-btn" class="btn btn-secondary">Login</button>
+      <button id="signup-btn" class="btn btn-primary">Sign Up</button>
+      <div id="user-menu" class="user-menu hidden">
+        <div class="user-profile">
+          <img id="user-avatar" src="" alt="Avatar" class="avatar">
+          <div>
+            <p id="user-name"></p>
+            <small id="user-email"></small>
+          </div>
+        </div>
+        <button id="upload-wallpaper-btn" class="menu-item">
+          <i class="fas fa-upload"></i> Upload Wallpaper
+        </button>
+        <button id="my-uploads-btn" class="menu-item">
+          <i class="fas fa-images"></i> My Uploads
+        </button>
+        <button id="favorites-btn" class="menu-item">
+          <i class="fas fa-heart"></i> Favorites
+        </button>
+        <button id="settings-btn" class="menu-item">
+          <i class="fas fa-cog"></i> Settings
+        </button>
+        <hr>
+        <button id="logout-btn" class="menu-item text-danger">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+  <main class="page-grid" id="home">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fas fa-thumbtack"></i>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#home" class="sidebar-link active"><i class="fas fa-home"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-bell"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-plus-square"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-comment-dots"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-cog"></i></a>
+      </nav>
+    </aside>
+
+    <section class="content-panel">
+      <div class="top-bar">
+        <div>
+          <p class="page-label">Anime Wallpapers</p>
+          <h1 class="page-title">Curated anime wallpapers for your device</h1>
+        </div>
+
+        <div class="top-actions">
+          <button class="icon-action" title="Reset filter"><i class="fas fa-sliders-h"></i></button>
+        </div>
+      </div>
+
+      <section id="categories" class="search-area">
+        <div class="search-panel">
+          <i class="fas fa-search"></i>
+          <input type="search" placeholder="Search anime characters, scenes or styles..." id="search-input">
+          <button type="button" id="search-btn">Search</button>
+        </div>
+        <div class="chip-list">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="action">Action</button>
+          <button class="chip" data-filter="fantasy">Fantasy</button>
+          <button class="chip" data-filter="mecha">Mecha</button>
+          <button class="chip" data-filter="sliceoflife">Slice of Life</button>
+          <button class="chip" data-filter="fanart">Fanart</button>
+          <button class="chip" data-filter="movies">Movies</button>
+        </div>
+      </section>
+
+      <section id="wallpapers" class="gallery-grid">
+        <article class="photo-card" data-tags="action anime naruto">
+          <img src="https://wallpapercave.com/uwp/uwp5011554.jpeg" alt="Naruto action scene">
+        </article>
+        <article class="photo-card" data-tags="fantasy anime studio ghibli">
+          <img src="https://wallpapercave.com/uwp/uwp5011548.jpeg" alt="Studio Ghibli fantasy">
+        </article>
+        <article class="photo-card" data-tags="sliceoflife anime school">
+          <img src="https://wallpapercave.com/uwp/uwp5011543.jpeg" alt="School life anime">
+        </article>
+        <article class="photo-card" data-tags="fanart anime digital art">
+          <img src="https://wallpapercave.com/uwp/uwp5011545.jpeg" alt="Anime fanart">
+        </article>
+        <article class="photo-card" data-tags="movies anime film">
+          <img src="https://wallpapercave.com/uwp/uwp5011540.jpeg" alt="Anime movie poster">
+        </article>
+        <article class="photo-card" data-tags="action anime dragon ball">
+          <img src="https://wallpapercave.com/uwp/uwp5011420.jpeg" alt="Dragon Ball action">
+        </article>
+        <article class="photo-card" data-tags="fantasy anime magic">
+          <img src="https://wallpapercave.com/uwp/uwp5011096.jpeg" alt="Magical fantasy anime">
+        </article>
+        <article class="photo-card" data-tags="mecha anime evangelion">
+          <img src="https://wallpapercave.com/uwp/uwp5010388.jpeg" alt="Evangelion mecha">
+        </article>
+        <article class="photo-card" data-tags="sliceoflife anime romance">
+          <img src="https://wallpapercave.com/uwp/uwp5010336.png" alt="Romantic slice of life">
+        </article>
+        <article class="photo-card" data-tags="fanart anime chibi">
+          <img src="https://wallpapercave.com/uwp/uwp5009997.png" alt="Chibi fanart">
+        </article>
+        <article class="photo-card" data-tags="movies anime your name">
+          <img src="https://wallpapercave.com/uwp/uwp5009700.jpeg" alt="Your Name movie">
+        </article>
+        <article class="photo-card" data-tags="action anime attack on titan">
+          <img src="https://wallpapercave.com/uwp/uwp5008361.jpeg" alt="Attack on Titan action">
+        </article>
+        <article class="photo-card" data-tags="fantasy anime fullmetal alchemist">
+          <img src="https://wallpapercave.com/uwp/uwp5008317.jpeg" alt="Fullmetal Alchemist fantasy">
+        </article>
+        <article class="photo-card" data-tags="mecha anime gundam">
+          <img src="https://wallpapercave.com/uwp/uwp5008046.jpeg" alt="Gundam mecha">
+        </article>
+        <article class="photo-card" data-tags="sliceoflife anime my neighbor totoro">
+          <img src="https://wallpapercave.com/uwp/uwp5007759.jpeg" alt="My Neighbor Totoro">
+        </article>
+        <article class="photo-card" data-tags="fanart anime watercolor">
+          <img src="https://wallpapercave.com/uwp/uwp5007760.jpeg" alt="Watercolor fanart">
+        </article>
+        <article class="photo-card" data-tags="movies anime spirited away">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Spirited Away">
+        </article>
+        <article class="photo-card" data-tags="action anime one punch man">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="One Punch Man">
+        </article>
+        <article class="photo-card" data-tags="fantasy anime fairy tail">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Fairy Tail fantasy">
+        </article>
+        <article class="photo-card" data-tags="mecha anime pacific rim">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Pacific Rim mecha">
+        </article>
+        <article class="photo-card" data-tags="sliceoflife anime k-on">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="K-On slice of life">
+        </article>
+        <article class="photo-card" data-tags="fanart anime digital">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Digital fanart">
+        </article>
+        <article class="photo-card" data-tags="movies anime howl's moving castle">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Howl's Moving Castle">
+        </article>
+        <article class="photo-card" data-tags="action anime jujutsu kaisen">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Jujutsu Kaisen action">
+        </article>
+        <article class="photo-card" data-tags="fantasy anime demon slayer">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Demon Slayer fantasy">
+        </article>
+        <article class="photo-card" data-tags="mecha anime neon genesis">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Neon Genesis mecha">
+        </article>
+        <article class="photo-card" data-tags="sliceoflife anime toradora">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Toradora slice of life">
+        </article>
+        <article class="photo-card" data-tags="fanart anime sketch">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Sketch fanart">
+        </article>
+        <article class="photo-card" data-tags="movies anime ponyo">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Ponyo movie">
+        </article>
+        <article class="photo-card" data-tags="action anime bleach">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Bleach action">
+        </article>
+        <article class="photo-card" data-tags="fantasy anime hunter x hunter">
+          <img src="https://wallpapercave.com/uwp/uwp5007376.jpeg" alt="Hunter x Hunter fantasy">
+        </article>
+      </section>
+
+      <section id="about" class="about-panel">
+        <div class="about-box">
+          <h2>About Anime Wallpapers</h2>
+          <p>This site features a curated collection of anime wallpapers. Browse scenes, characters, and fanart from classics, shonen hits, dramatic movies, and new releases to find the perfect background for your screen.</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- Authentication Modals -->
+  <!-- Sign Up Modal -->
+  <div id="signup-modal" class="modal hidden">
+    <div class="modal-content auth-modal">
+      <button class="modal-close">&times;</button>
+      <div class="auth-container">
+        <div class="auth-header">
+          <h2>Create Account</h2>
+          <p>Join our anime wallpaper community</p>
+        </div>
+        <form id="signup-form">
+          <div class="form-group">
+            <label for="signup-name">Full Name</label>
+            <input type="text" id="signup-name" required placeholder="John Anime">
+          </div>
+          <div class="form-group">
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" required placeholder="you@example.com">
+          </div>
+          <button type="submit" class="btn btn-primary btn-large">Sign Up with Email</button>
+          <p class="auth-divider">Or continue with</p>
+          <button type="button" class="btn btn-outline btn-google">
+            <i class="fab fa-google"></i> Google
+          </button>
+        </form>
+        <p class="auth-footer">Already have an account? <a href="#" class="toggle-auth">Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal hidden">
+    <div class="modal-content auth-modal">
+      <button class="modal-close">&times;</button>
+      <div class="auth-container">
+        <div class="auth-header">
+          <h2>Login</h2>
+          <p>Welcome back!</p>
+        </div>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" required placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" required placeholder="••••••••">
+          </div>
+          <div class="form-checkbox">
+            <input type="checkbox" id="remember-me">
+            <label for="remember-me">Remember me</label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-large">Login</button>
+          <p class="auth-divider">Or continue with</p>
+          <button type="button" class="btn btn-outline btn-google">
+            <i class="fab fa-google"></i> Google
+          </button>
+        </form>
+        <p class="auth-footer">Don't have an account? <a href="#" class="toggle-auth">Sign up</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Verification Modal -->
+  <div id="verify-email-modal" class="modal hidden">
+    <div class="modal-content auth-modal">
+      <div class="auth-container">
+        <div class="auth-header">
+          <i class="fas fa-envelope-circle-check" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
+          <h2>Check Your Email</h2>
+          <p>We've sent a verification link to <strong id="verify-email-display"></strong></p>
+        </div>
+        <div class="verification-content">
+          <p>Click the link in the email to verify your address. Once verified, you'll receive your password.</p>
+          <button id="resend-email-btn" class="btn btn-secondary">Resend Email</button>
+          <p style="text-align: center; margin-top: 1rem; color: #6b7280;">
+            <small>Check your spam folder if you don't see the email</small>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Received Modal -->
+  <div id="password-modal" class="modal hidden">
+    <div class="modal-content auth-modal">
+      <div class="auth-container">
+        <div class="auth-header">
+          <i class="fas fa-lock-open" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
+          <h2>Email Verified!</h2>
+          <p>Your temporary password has been sent to your email</p>
+        </div>
+        <div class="verification-content">
+          <div class="password-box">
+            <p style="color: #6b7280; font-size: 0.875rem;">Temporary Password:</p>
+            <code id="temp-password-display" style="font-size: 1.25rem; font-weight: bold; letter-spacing: 0.05em;"></code>
+            <button id="copy-password-btn" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">
+              <i class="fas fa-copy"></i> Copy Password
+            </button>
+          </div>
+          <button id="proceed-login-btn" class="btn btn-primary btn-large" style="margin-top: 1rem;">Proceed to Login</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Modal -->
+  <div id="upload-modal" class="modal hidden">
+    <div class="modal-content upload-modal">
+      <button class="modal-close">&times;</button>
+      <div class="upload-container">
+        <div class="upload-header">
+          <h2>Upload Your Wallpaper</h2>
+          <p>Share your favorite anime artwork with the community</p>
+        </div>
+        <form id="upload-form">
+          <div class="form-group">
+            <label for="upload-title">Title</label>
+            <input type="text" id="upload-title" required placeholder="e.g., Midnight Sky - Naruto">
+          </div>
+          <div class="form-group">
+            <label for="upload-description">Description</label>
+            <textarea id="upload-description" rows="3" placeholder="Describe your wallpaper..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="upload-category">Category</label>
+            <select id="upload-category">
+              <option value="fanart">Fanart</option>
+              <option value="action">Action</option>
+              <option value="fantasy">Fantasy</option>
+              <option value="mecha">Mecha</option>
+              <option value="sliceoflife">Slice of Life</option>
+              <option value="movies">Movies</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="upload-tags">Tags (comma separated)</label>
+            <input type="text" id="upload-tags" placeholder="naruto, action, anime">
+          </div>
+          <div class="form-group">
+            <label for="upload-image">Image</label>
+            <div class="file-upload">
+              <input type="file" id="upload-image" accept="image/*" required>
+              <div class="file-upload-area">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drag and drop your image here or click to browse</p>
+                <small>Supported formats: JPG, PNG, WebP (Max 5MB)</small>
+              </div>
+            </div>
+            <div id="upload-preview" class="upload-preview hidden">
+              <img id="preview-image" src="" alt="Preview">
+              <button type="button" id="remove-image" class="btn btn-secondary">Remove</button>
+            </div>
+          </div>
+          <div class="form-checkbox">
+            <input type="checkbox" id="upload-public" checked>
+            <label for="upload-public">Make this wallpaper public</label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-large">Upload Wallpaper</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div id="settings-panel" class="settings-panel hidden">
+    <div class="settings-content">
+      <h3>Settings</h3>
+      <div class="setting-item">
+        <label for="dark-mode-toggle">Dark Mode</label>
+        <label class="switch">
+          <input type="checkbox" id="dark-mode-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="setting-item">
+        <label for="image-upload">Upload Image</label>
+        <input type="file" id="image-upload" accept="image/*">
+        <button id="upload-btn">Upload</button>
+      </div>
+      <button id="close-settings">Close</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+</html>
