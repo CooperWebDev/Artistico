@@ -853,6 +853,12 @@ form {
   cursor: pointer;
 }
 
+.form-note {
+  margin-bottom: 1rem;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
 .form-checkbox {
   display: flex;
   align-items: center;

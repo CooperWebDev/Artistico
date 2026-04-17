@@ -221,26 +221,21 @@ function initializeApp() {
     }
 
     try {
-      // Sign up directly with Supabase client
       const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
           data: {
-            username: username
-          }
-        }
+            username,
+          },
+        },
       });
 
       if (error) throw error;
 
-      // Success - close modal and show success message
       document.getElementById('signup-modal').classList.add('hidden');
-      alert('Account created successfully! Please check your email to confirm your account.');
-
-      // Clear form
+      alert('Account created successfully! You can now log in.');
       document.getElementById('signup-form').reset();
-
     } catch (error) {
       alert('Error: ' + error.message);
     }

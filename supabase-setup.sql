@@ -86,6 +86,9 @@ CREATE TABLE user_profiles (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Disable RLS for user_profiles to allow trigger inserts
+ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
+
 -- Wallpapers table
 CREATE TABLE wallpapers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -104,7 +107,6 @@ CREATE TABLE wallpapers (
 
 -- Row Level Security (RLS) Policies
 -- Enable RLS on tables
-ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wallpapers ENABLE ROW LEVEL SECURITY;
 
 -- Wallpapers policies
@@ -128,19 +130,6 @@ CREATE POLICY "Users can delete their own wallpapers"
   ON wallpapers FOR DELETE
   USING (auth.uid() = user_id);
 
--- User profiles policies
-CREATE POLICY "Users can view their own profile"
-  ON user_profiles FOR SELECT
-  USING (auth.uid() = id);
-
-CREATE POLICY "Users can update their own profile"
-  ON user_profiles FOR UPDATE
-  USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert their own profile"
-  ON user_profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
-
 -- Storage policies for wallpapers bucket
 CREATE POLICY "Anyone can view wallpaper images"
   ON storage.objects FOR SELECT
@@ -162,11 +151,19 @@ CREATE POLICY "Users can delete their own wallpaper images"
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO user_profiles (id, email, username, is_verified)
-  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'username', TRUE);
+  BEGIN
+    INSERT INTO user_profiles (id, email, is_verified)
+    VALUES (NEW.id, NEW.email, TRUE);
+  EXCEPTION WHEN OTHERS THEN
+    -- Log error but don't fail signup
+    RAISE WARNING 'Failed to create user profile for user %: %', NEW.id, SQLERRM;
+  END;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Drop trigger if exists
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

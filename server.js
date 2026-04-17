@@ -11,8 +11,6 @@ app.use(express.json());
 // Serve static files (HTML, CSS, JS)
 app.use(express.static('.'));
 
-// Routes
-
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
