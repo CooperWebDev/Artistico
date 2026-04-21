@@ -152,9 +152,21 @@ function initializeApp() {
       if (data.avatar_url) {
         document.getElementById('user-avatar').src = data.avatar_url;
       }
+      
+      // Also update settings profile tab
+      document.getElementById('profile-username').textContent = data.username || user.email;
+      document.getElementById('profile-email').textContent = user.email;
+      if (data.avatar_url) {
+        document.getElementById('profile-avatar').src = data.avatar_url;
+      }
+      if (data.bio) {
+        document.getElementById('profile-bio').value = data.bio;
+      }
     } else {
       document.getElementById('user-name').textContent = user.email;
       document.getElementById('user-email').textContent = user.email;
+      document.getElementById('profile-username').textContent = user.email;
+      document.getElementById('profile-email').textContent = user.email;
     }
   }
 
@@ -209,18 +221,40 @@ function initializeApp() {
     const email = document.getElementById('signup-email').value.trim();
     const username = document.getElementById('signup-name').value.trim();
     const password = document.getElementById('signup-password').value;
+    const confirmPassword = document.getElementById('signup-confirm-password').value;
+    const errorDiv = document.getElementById('signup-error');
+    const submitBtn = document.getElementById('signup-submit-btn');
 
-    if (!email || !username || !password) {
-      alert('Please fill in all fields');
+    // Validation
+    if (!email || !username || !password || !confirmPassword) {
+      errorDiv.textContent = 'Please fill in all fields';
+      errorDiv.style.display = 'block';
       return;
     }
 
     if (password.length < 6) {
-      alert('Password must be at least 6 characters long');
+      errorDiv.textContent = 'Password must be at least 6 characters long';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      errorDiv.textContent = 'Passwords do not match';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    if (username.length < 3) {
+      errorDiv.textContent = 'Username must be at least 3 characters long';
+      errorDiv.style.display = 'block';
       return;
     }
 
     try {
+      errorDiv.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+
       const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
@@ -233,11 +267,27 @@ function initializeApp() {
 
       if (error) throw error;
 
+      // Create user profile
+      const { error: profileError } = await supabaseClient
+        .from('user_profiles')
+        .insert({
+          id: data.user.id,
+          username,
+          email,
+        });
+
+      if (profileError) throw profileError;
+
       document.getElementById('signup-modal').classList.add('hidden');
+      errorDiv.style.display = 'none';
       alert('Account created successfully! You can now log in.');
       document.getElementById('signup-form').reset();
     } catch (error) {
-      alert('Error: ' + error.message);
+      errorDiv.textContent = 'Error: ' + error.message;
+      errorDiv.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account';
     }
   });
 
@@ -264,13 +314,20 @@ function initializeApp() {
 
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
+    const errorDiv = document.getElementById('login-error');
+    const submitBtn = document.getElementById('login-submit-btn');
 
     if (!email || !password) {
-      alert('Please enter both email and password');
+      errorDiv.textContent = 'Please enter both email and password';
+      errorDiv.style.display = 'block';
       return;
     }
 
     try {
+      errorDiv.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in...';
+
       // Sign in directly with Supabase client
       const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
@@ -287,7 +344,11 @@ function initializeApp() {
       document.getElementById('login-form').reset();
 
     } catch (error) {
-      alert('Login error: ' + error.message);
+      errorDiv.textContent = 'Login error: ' + error.message;
+      errorDiv.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Login';
     }
   });
 
@@ -326,14 +387,55 @@ function initializeApp() {
 
   // ============ USER MENU TOGGLE ============
   let userMenuOpen = false;
-  document.querySelector('.navbar-auth').addEventListener('click', (e) => {
-    if (!e.target.closest('#user-menu') && e.target.id !== 'user-menu') {
-      userMenuOpen = !userMenuOpen;
-      if (userMenuOpen && !document.getElementById('user-menu').classList.contains('hidden')) {
-        document.getElementById('user-menu').classList.add('hidden');
-        userMenuOpen = false;
-      }
+  
+  // Toggle user menu when clicking on profile area
+  document.querySelector('.user-profile')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const userMenu = document.getElementById('user-menu');
+    userMenuOpen = !userMenuOpen;
+    if (userMenuOpen) {
+      userMenu.classList.remove('hidden');
+    } else {
+      userMenu.classList.add('hidden');
     }
+  });
+
+  // Close menu when clicking elsewhere
+  document.addEventListener('click', () => {
+    if (userMenuOpen) {
+      document.getElementById('user-menu').classList.add('hidden');
+      userMenuOpen = false;
+    }
+  });
+
+  // Settings button in user menu
+  document.getElementById('settings-btn')?.addEventListener('click', () => {
+    document.getElementById('settings-panel').classList.remove('hidden');
+    document.getElementById('user-menu').classList.add('hidden');
+    userMenuOpen = false;
+  });
+
+  // My uploads button in user menu
+  document.getElementById('my-uploads-btn')?.addEventListener('click', () => {
+    const settingsPanel = document.getElementById('settings-panel');
+    settingsPanel.classList.remove('hidden');
+    
+    // Switch to uploads tab
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+      tab.classList.remove('active');
+      if (tab.dataset.tab === 'uploads') {
+        tab.classList.add('active');
+      }
+    });
+    
+    document.querySelectorAll('.settings-tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+    document.getElementById('uploads-tab').classList.add('active');
+    
+    loadUserUploads();
+    document.getElementById('user-menu').classList.add('hidden');
+    userMenuOpen = false;
   });
 
   // ============ UPLOAD FUNCTIONALITY ============
@@ -406,25 +508,55 @@ function initializeApp() {
       return;
     }
 
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file');
+      return;
+    }
+
     const title = document.getElementById('upload-title').value;
     const description = document.getElementById('upload-description').value;
     const category = document.getElementById('upload-category').value;
-    const tags = document.getElementById('upload-tags').value.split(',').map(t => t.trim());
+    const tags = document.getElementById('upload-tags').value.split(',').map(t => t.trim()).filter(t => t);
     const isPublic = document.getElementById('upload-public').checked;
+    const submitBtn = document.getElementById('upload-submit-btn');
+    const progressDiv = document.getElementById('upload-progress');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const errorDiv = document.getElementById('upload-error');
 
     try {
-      // Upload image to storage
+      errorDiv.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Uploading...';
+      progressDiv.classList.remove('hidden');
+
+      // Upload image to storage with progress tracking
       const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      
       const { error: uploadError } = await supabaseClient.storage
         .from('wallpapers')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
+      progressFill.style.width = '50%';
+      progressText.textContent = 'Processing upload...';
+
       // Get public URL
       const { data: { publicUrl } } = supabaseClient.storage
         .from('wallpapers')
         .getPublicUrl(filePath);
+
+      progressFill.style.width = '75%';
+      progressText.textContent = 'Saving metadata...';
 
       // Save wallpaper metadata
       const { error: dbError } = await supabaseClient
@@ -441,16 +573,28 @@ function initializeApp() {
 
       if (dbError) throw dbError;
 
-      alert('Wallpaper uploaded successfully!');
-      document.getElementById('upload-modal').classList.add('hidden');
-      uploadForm.reset();
-      uploadPreview.classList.add('hidden');
+      progressFill.style.width = '100%';
+      progressText.textContent = 'Upload complete!';
 
-      // Refresh the wallpaper gallery
-      loadWallpapers();
+      setTimeout(() => {
+        alert('Wallpaper uploaded successfully!');
+        document.getElementById('upload-modal').classList.add('hidden');
+        uploadForm.reset();
+        uploadPreview.classList.add('hidden');
+        progressDiv.classList.add('hidden');
+        progressFill.style.width = '0%';
+
+        // Refresh the wallpaper gallery
+        loadWallpapers();
+      }, 1000);
 
     } catch (error) {
-      alert('Upload error: ' + error.message);
+      errorDiv.textContent = 'Upload error: ' + error.message;
+      errorDiv.style.display = 'block';
+      progressDiv.classList.add('hidden');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Upload Wallpaper';
     }
   });
 
@@ -458,6 +602,114 @@ function initializeApp() {
   const settingsPanel = document.getElementById('settings-panel');
   const closeSettings = document.getElementById('close-settings');
   const darkModeToggle = document.getElementById('dark-mode-toggle');
+  const settingsTabs = document.querySelectorAll('.settings-tab');
+  const tabContents = document.querySelectorAll('.settings-tab-content');
+
+  // Settings tabs functionality
+  settingsTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab;
+      
+      // Update active tab
+      settingsTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // Update active content
+      tabContents.forEach(content => content.classList.remove('active'));
+      document.getElementById(tabName + '-tab').classList.add('active');
+
+      // Load content if needed
+      if (tabName === 'uploads') {
+        loadUserUploads();
+      }
+    });
+  });
+
+  async function loadUserUploads() {
+    try {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) return;
+
+      const { data: uploads, error } = await supabaseClient
+        .from('wallpapers')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const uploadsList = document.getElementById('user-uploads-list');
+      
+      if (!uploads || uploads.length === 0) {
+        uploadsList.innerHTML = '<p>You haven\'t uploaded any wallpapers yet.</p>';
+        return;
+      }
+
+      uploadsList.innerHTML = uploads.map(upload => `
+        <div class="upload-item">
+          <img src="${upload.image_url}" alt="${upload.title}" class="upload-thumbnail">
+          <div class="upload-info">
+            <h5>${upload.title}</h5>
+            <p>${upload.description || 'No description'}</p>
+            <small>Category: ${upload.category} | Uploaded: ${new Date(upload.created_at).toLocaleDateString()}</small>
+          </div>
+          <div class="upload-actions">
+            <button class="btn btn-sm btn-secondary" onclick="copyImageUrl('${upload.image_url}')">Copy URL</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteUpload('${upload.id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+
+    } catch (error) {
+      console.error('Error loading uploads:', error);
+      document.getElementById('user-uploads-list').innerHTML = '<p>Error loading uploads</p>';
+    }
+  }
+
+  window.copyImageUrl = function(url) {
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Image URL copied to clipboard!');
+    });
+  };
+
+  window.deleteUpload = async function(uploadId) {
+    if (!confirm('Are you sure you want to delete this wallpaper?')) return;
+
+    try {
+      const { error } = await supabaseClient
+        .from('wallpapers')
+        .delete()
+        .eq('id', uploadId);
+
+      if (error) throw error;
+
+      alert('Wallpaper deleted successfully');
+      loadUserUploads();
+      loadWallpapers();
+    } catch (error) {
+      alert('Error deleting wallpaper: ' + error.message);
+    }
+  };
+
+  // Profile management
+  document.getElementById('save-profile-btn')?.addEventListener('click', async () => {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const bio = document.getElementById('profile-bio').value;
+
+    try {
+      const { error } = await supabaseClient
+        .from('user_profiles')
+        .update({ bio })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      alert('Profile updated successfully!');
+    } catch (error) {
+      alert('Error updating profile: ' + error.message);
+    }
+  });
 
   if (closeSettings) {
     closeSettings.addEventListener('click', () => {
@@ -468,6 +720,7 @@ function initializeApp() {
   if (darkModeToggle) {
     darkModeToggle.addEventListener('change', () => {
       document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
     });
   }
 

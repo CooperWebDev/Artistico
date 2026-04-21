@@ -132,8 +132,16 @@
             <label for="signup-email">Email</label>
             <input type="email" id="signup-email" required placeholder="you@example.com">
           </div>
-          <p class="form-note">A random password will be generated and sent to your email address.</p>
-          <button type="submit" class="btn btn-primary btn-large">Create Account</button>
+          <div class="form-group">
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" required placeholder="••••••••" minlength="6">
+          </div>
+          <div class="form-group">
+            <label for="signup-confirm-password">Confirm Password</label>
+            <input type="password" id="signup-confirm-password" required placeholder="••••••••" minlength="6">
+          </div>
+          <button type="submit" class="btn btn-primary btn-large" id="signup-submit-btn">Create Account</button>
+          <div id="signup-error" class="error-message" style="display: none;"></div>
         </form>
         <p class="auth-footer">Already have an account? <a href="#" class="toggle-auth">Login</a></p>
       </div>
@@ -162,18 +170,13 @@
             <input type="checkbox" id="remember-me">
             <label for="remember-me">Remember me</label>
           </div>
-          <button type="submit" class="btn btn-primary btn-large">Login</button>
-          <p class="auth-divider">Or continue with</p>
-          <button type="button" class="btn btn-outline btn-google">
-            <i class="fab fa-google"></i> Google
-          </button>
+          <button type="submit" class="btn btn-primary btn-large" id="login-submit-btn">Login</button>
+          <div id="login-error" class="error-message" style="display: none;"></div>
         </form>
         <p class="auth-footer">Don't have an account? <a href="#" class="toggle-auth">Sign up</a></p>
       </div>
     </div>
   </div>
-
-  <!-- Upload Modal -->
 
   <!-- Upload Modal -->
   <div id="upload-modal" class="modal hidden">
@@ -186,7 +189,7 @@
         </div>
         <form id="upload-form">
           <div class="form-group">
-            <label for="upload-title">Title</label>
+            <label for="upload-title">Title <span class="required">*</span></label>
             <input type="text" id="upload-title" required placeholder="e.g., Midnight Sky - Naruto">
           </div>
           <div class="form-group">
@@ -209,7 +212,7 @@
             <input type="text" id="upload-tags" placeholder="naruto, action, anime">
           </div>
           <div class="form-group">
-            <label for="upload-image">Image</label>
+            <label for="upload-image">Image <span class="required">*</span></label>
             <div class="file-upload">
               <input type="file" id="upload-image" accept="image/*" required>
               <div class="file-upload-area">
@@ -222,29 +225,76 @@
               <img id="preview-image" src="" alt="Preview">
               <button type="button" id="remove-image" class="btn btn-secondary">Remove</button>
             </div>
+            <div id="upload-progress" class="upload-progress hidden">
+              <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+              </div>
+              <p id="progress-text">Uploading... 0%</p>
+            </div>
           </div>
           <div class="form-checkbox">
             <input type="checkbox" id="upload-public" checked>
             <label for="upload-public">Make this wallpaper public</label>
           </div>
-          <button type="submit" class="btn btn-primary btn-large">Upload Wallpaper</button>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Settings Panel -->
+          <button type="submit" class="btn btn-primary btn-large" id="upload-submit-btn">Upload Wallpaper</button>
+          <div id="upload-error" class="error-message" style="display: none;"></div>
+        </form>/Profile Panel -->
   <div id="settings-panel" class="settings-panel hidden">
     <div class="settings-content">
-      <h3>Settings</h3>
-      <div class="setting-item">
-        <label for="dark-mode-toggle">Dark Mode</label>
-        <label class="switch">
-          <input type="checkbox" id="dark-mode-toggle">
-          <span class="slider"></span>
-        </label>
+      <div class="settings-header">
+        <h3>Account Settings</h3>
+        <button id="close-settings" class="close-btn">&times;</button>
       </div>
-      <div class="setting-item">
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="profile">Profile</button>
+        <button class="settings-tab" data-tab="uploads">My Uploads</button>
+        <button class="settings-tab" data-tab="preferences">Preferences</button>
+      </div>
+      
+      <!-- Profile Tab -->
+      <div class="settings-tab-content active" id="profile-tab">
+        <div class="profile-section">
+          <h4>Profile Information</h4>
+          <div class="profile-avatar-section">
+            <img id="profile-avatar" src="" alt="Profile Avatar" class="profile-avatar">
+            <div>
+              <p id="profile-username" class="profile-username"></p>
+              <p id="profile-email" class="profile-email"></p>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="profile-bio">Bio</label>
+            <textarea id="profile-bio" placeholder="Tell us about yourself..." rows="3"></textarea>
+          </div>
+          <button class="btn btn-primary" id="save-profile-btn">Save Profile</button>
+        </div>
+      </div>
+
+      <!-- My Uploads Tab -->
+      <div class="settings-tab-content" id="uploads-tab">
+        <h4>Your Uploaded Wallpapers</h4>
+        <div id="user-uploads-list" class="uploads-list">
+          <p>Loading your uploads...</p>
+        </div>
+      </div>
+
+      <!-- Preferences Tab -->
+      <div class="settings-tab-content" id="preferences-tab">
+        <div class="preference-item">
+          <label for="dark-mode-toggle">Dark Mode</label>
+          <label class="switch">
+            <input type="checkbox" id="dark-mode-toggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="preference-item">
+          <label for="notifications-toggle">Email Notifications</label>
+          <label class="switch">
+            <input type="checkbox" id="notifications-toggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div
         <label for="image-upload">Upload Image</label>
         <input type="file" id="image-upload" accept="image/*">
         <button id="upload-btn">Upload</button>
