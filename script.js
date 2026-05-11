@@ -267,14 +267,16 @@ function initializeApp() {
 
       if (error) throw error;
 
-      // Create user profile
+      // Create or update user profile
       const { error: profileError } = await supabaseClient
         .from('user_profiles')
-        .insert({
-          id: data.user.id,
-          username,
-          email,
-        });
+        .upsert([
+          {
+            id: data.user.id,
+            username,
+            email,
+          }
+        ], { onConflict: 'id' });
 
       if (profileError) throw profileError;
 

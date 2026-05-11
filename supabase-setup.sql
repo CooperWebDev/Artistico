@@ -89,6 +89,19 @@ CREATE TABLE user_profiles (
 -- Disable RLS for user_profiles to allow trigger inserts
 ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
 
+-- If RLS is enabled later, allow authenticated users to manage their own profile row.
+CREATE POLICY "Authenticated users can insert their own profile"
+  ON user_profiles FOR INSERT
+  WITH CHECK (auth.uid() = id AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can select their own profile"
+  ON user_profiles FOR SELECT
+  USING (auth.uid() = id);
+
+CREATE POLICY "Authenticated users can update their own profile"
+  ON user_profiles FOR UPDATE
+  USING (auth.uid() = id);
+
 -- Wallpapers table
 CREATE TABLE wallpapers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
