@@ -120,10 +120,10 @@ function initializeApp() {
 
   // ============ AUTH STATE MANAGEMENT ============
   async function checkAuthStatus() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-
-    if (session) {
-      await displayUserMenu(session.user);
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      await displayUserMenu(user);
     } else {
       displayAuthButtons();
     }
@@ -135,70 +135,26 @@ function initializeApp() {
     document.getElementById('user-menu').classList.add('hidden');
   }
 
-  async function ensureUserProfile(user) {
-    if (!user?.id) return;
-
-    const { data: existingProfile, error: selectError } = await supabaseClient
-      .from('user_profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-
-    if (selectError && selectError.code !== 'PGRST116') {
-      console.warn('Could not check user profile:', selectError.message);
-      return;
-    }
-
-    if (!existingProfile) {
-      const { error: insertError } = await supabaseClient
-        .from('user_profiles')
-        .insert({
-          id: user.id,
-          email: user.email,
-          username: user.user_metadata?.username || user.email,
-          is_verified: true,
-        });
-
-      if (insertError) {
-        console.warn('Could not insert missing user profile:', insertError.message);
-      }
-    }
-  }
-
   async function displayUserMenu(user) {
     document.getElementById('signup-btn').classList.add('hidden');
     document.getElementById('login-btn').classList.add('hidden');
     document.getElementById('user-menu').classList.remove('hidden');
     
-    await ensureUserProfile(user);
-
-    const { data } = await supabaseClient
-      .from('user_profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    // Use the user data from localStorage
+    document.getElementById('user-name').textContent = user.username || user.email;
+    document.getElementById('user-email').textContent = user.email;
+    if (user.avatar_url) {
+      document.getElementById('user-avatar').src = user.avatar_url;
+    }
     
-    if (data) {
-      document.getElementById('user-name').textContent = data.username || data.email || user.email;
-      document.getElementById('user-email').textContent = user.email;
-      if (data.avatar_url) {
-        document.getElementById('user-avatar').src = data.avatar_url;
-      }
-      
-      // Also update settings profile tab
-      document.getElementById('profile-username').textContent = data.username || user.email;
-      document.getElementById('profile-email').textContent = user.email;
-      if (data.avatar_url) {
-        document.getElementById('profile-avatar').src = data.avatar_url;
-      }
-      if (data.bio) {
-        document.getElementById('profile-bio').value = data.bio;
-      }
-    } else {
-      document.getElementById('user-name').textContent = user.email;
-      document.getElementById('user-email').textContent = user.email;
-      document.getElementById('profile-username').textContent = user.email;
-      document.getElementById('profile-email').textContent = user.email;
+    // Also update settings profile tab
+    document.getElementById('profile-username').textContent = user.username || user.email;
+    document.getElementById('profile-email').textContent = user.email;
+    if (user.avatar_url) {
+      document.getElementById('profile-avatar').src = user.avatar_url;
+    }
+    if (user.bio) {
+      document.getElementById('profile-bio').value = user.bio;
     }
   }
 
@@ -287,38 +243,31 @@ function initializeApp() {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Creating account...';
 
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-          },
-        },
-      });
+      // Insert directly into user_profiles
+      const { data, error } = await supabaseClient
+        .from('user_profiles')
+        .insert({
+          email,
+          username,
+          password, // Plain text for simplicity (not secure)
+          is_verified: true,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      // Create the app profile row directly, in case the DB trigger is not active
-      if (data?.user?.id) {
-        const { error: profileError } = await supabaseClient
-          .from('user_profiles')
-          .upsert({
-            id: data.user.id,
-            email,
-            username,
-            is_verified: true,
-          }, { onConflict: 'id' });
-
-        if (profileError) {
-          console.warn('Could not upsert user profile:', profileError.message);
-        }
-      }
+      // Store user in localStorage
+      localStorage.setItem('user', JSON.stringify(data));
 
       document.getElementById('signup-modal').classList.add('hidden');
       errorDiv.style.display = 'none';
       alert('Account created successfully! You can now log in.');
       document.getElementById('signup-form').reset();
+
+      // Update UI
+      await displayUserMenu(data);
+
     } catch (error) {
       errorDiv.textContent = 'Error: ' + error.message;
       errorDiv.style.display = 'block';
@@ -330,19 +279,8 @@ function initializeApp() {
 
   // ============ LOGOUT ============
   document.getElementById('logout-btn').addEventListener('click', async () => {
-    try {
-      // Sign out directly with Supabase client
-      const { error } = await supabaseClient.auth.signOut();
-      if (error) throw error;
-
-      // Update UI
-      displayAuthButtons();
-
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still update UI even if logout fails
-      displayAuthButtons();
-    }
+    localStorage.removeItem('user');
+    displayAuthButtons();
   });
 
   // ============ LOGIN FORM ============
@@ -365,17 +303,22 @@ function initializeApp() {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Logging in...';
 
-      // Sign in directly with Supabase client
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-      });
+      // Query user_profiles for matching email and password
+      const { data, error } = await supabaseClient
+        .from('user_profiles')
+        .select('*')
+        .eq('email', email)
+        .eq('password', password)
+        .single();
 
-      if (error) throw error;
+      if (error || !data) throw new Error('Invalid email or password');
+
+      // Store user in localStorage
+      localStorage.setItem('user', JSON.stringify(data));
 
       // Success - close modal and update UI
       document.getElementById('login-modal').classList.add('hidden');
-      await displayUserMenu(data.user);
+      await displayUserMenu(data);
 
       // Clear form
       document.getElementById('login-form').reset();
@@ -533,11 +476,12 @@ function initializeApp() {
   uploadForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
       alert('You must be logged in to upload');
       return;
     }
+    const user = JSON.parse(userData);
 
     const file = fileInput.files[0];
     if (!file) {
@@ -663,10 +607,11 @@ function initializeApp() {
   });
 
   async function loadUserUploads() {
-    try {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) return;
+    const userData = localStorage.getItem('user');
+    if (!userData) return;
+    const user = JSON.parse(userData);
 
+    try {
       const { data: uploads, error } = await supabaseClient
         .from('wallpapers')
         .select('*')
@@ -730,8 +675,9 @@ function initializeApp() {
 
   // Profile management
   document.getElementById('save-profile-btn')?.addEventListener('click', async () => {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
+    const userData = localStorage.getItem('user');
+    if (!userData) return;
+    const user = JSON.parse(userData);
 
     const bio = document.getElementById('profile-bio').value;
 
@@ -742,6 +688,11 @@ function initializeApp() {
         .eq('id', user.id);
 
       if (error) throw error;
+
+      // Update localStorage
+      user.bio = bio;
+      localStorage.setItem('user', JSON.stringify(user));
+
       alert('Profile updated successfully!');
     } catch (error) {
       alert('Error updating profile: ' + error.message);
