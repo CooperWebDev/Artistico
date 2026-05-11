@@ -780,6 +780,8 @@ function initializeApp() {
       document.getElementById('user-favorites-list').innerHTML = '<p>Error loading favorites</p>';
     }
   }
+
+  async function loadUserUploads() {
     const userData = localStorage.getItem('user');
     if (!userData) return;
     const user = JSON.parse(userData);
@@ -819,6 +821,7 @@ function initializeApp() {
       console.error('Error loading uploads:', error);
       document.getElementById('user-uploads-list').innerHTML = '<p>Error loading uploads</p>';
     }
+  }
 
   window.copyImageUrl = function(url) {
     navigator.clipboard.writeText(url).then(() => {
