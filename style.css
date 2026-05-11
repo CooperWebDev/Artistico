@@ -782,7 +782,7 @@ body.dark-mode .settings-panel {
   transition: all 0.2s ease;
 }
 
-..modal-close:hover {
+.modal-close:hover {
   background-color: #f3f4f6;
   color: #374151;
 }

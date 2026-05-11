@@ -19,6 +19,8 @@ async function initializeApp() {
 
   const searchInput = document.getElementById('search-input');
   const searchBtn = document.getElementById('search-btn');
+  const navbarPageLabel = document.getElementById('navbar-page-label');
+  const navbarPageTitle = document.getElementById('navbar-page-title');
   const chips = document.querySelectorAll('.chip');
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   const filterBtn = document.querySelector('.icon-action[title="Reset filter"]');
@@ -33,6 +35,19 @@ async function initializeApp() {
   let userLikes = new Set();
   let userMenuOpen = false;
 
+  function updateNavbarTitle(pageId) {
+    const titles = {
+      'home': { label: 'Wallpapers', title: 'Curated wallpapers for your device' },
+      'upload-page': { label: 'Upload', title: 'Share your artwork with the community' },
+      'favorites-page': { label: 'Favorites', title: 'Your favorite wallpapers' },
+      'my-uploads-page': { label: 'My Uploads', title: 'Your uploaded wallpapers' },
+      'profile-page': { label: 'Profile', title: 'Manage your account' },
+    };
+    const pageData = titles[pageId] || titles.home;
+    navbarPageLabel && (navbarPageLabel.textContent = pageData.label);
+    navbarPageTitle && (navbarPageTitle.textContent = pageData.title);
+  }
+
   function showPage(pageId) {
     pages.forEach(id => {
       const page = document.getElementById(id);
@@ -41,6 +56,7 @@ async function initializeApp() {
     });
     document.getElementById('user-menu')?.classList.add('hidden');
     userMenuOpen = false;
+    updateNavbarTitle(pageId);
   }
 
   async function loadUserLikes() {
@@ -1116,6 +1132,7 @@ async function initializeApp() {
   // Initialize
   await checkAuthStatus();
   await loadWallpapers();
+  updateNavbarTitle('home');
   setupDetailModalListeners();
   setupNotificationsModalListeners();
 }
