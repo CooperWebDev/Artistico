@@ -74,25 +74,32 @@ VALUES ('wallpapers', 'wallpapers', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Users table extension
-CREATE TABLE user_profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT,
-  username TEXT,
-  avatar_url TEXT,
-  bio TEXT,
-  is_verified BOOLEAN DEFAULT TRUE,
-  verified_at TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+CREATE TABLE public.user_profiles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  email text NULL,
+  username text NULL,
+  password text NULL,
+  avatar_url text NULL,
+  bio text NULL,
+  is_verified boolean NULL DEFAULT true,
+  verified_at timestamp without time zone NULL DEFAULT now(),
+  created_at timestamp without time zone NULL DEFAULT now(),
+  updated_at timestamp without time zone NULL DEFAULT now(),
+  constraint user_profiles_pkey primary key (id)
+) TABLESPACE pg_default;
 
 -- Disable RLS for user_profiles to allow trigger inserts and direct updates
-ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- User profiles policies
+CREATE POLICY "Allow all operations on user_profiles"
+  ON public.user_profiles FOR ALL
+  USING (true);
 
 -- Wallpapers table
 CREATE TABLE wallpapers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   image_url TEXT NOT NULL,
@@ -110,81 +117,28 @@ CREATE TABLE wallpapers (
 ALTER TABLE wallpapers ENABLE ROW LEVEL SECURITY;
 
 -- Wallpapers policies
-CREATE POLICY "Anyone can view public wallpapers"
-  ON wallpapers FOR SELECT
-  USING (is_public = true);
-
-CREATE POLICY "Users can view their own wallpapers"
-  ON wallpapers FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Authenticated users can insert wallpapers"
-  ON wallpapers FOR INSERT
-  WITH CHECK (auth.uid() = user_id AND auth.role() = 'authenticated');
-
-CREATE POLICY "Users can update their own wallpapers"
-  ON wallpapers FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own wallpapers"
-  ON wallpapers FOR DELETE
-  USING (auth.uid() = user_id);
+CREATE POLICY "Allow all operations on wallpapers"
+  ON wallpapers FOR ALL
+  USING (true);
 
 -- Storage policies for wallpapers bucket
-CREATE POLICY "Anyone can view wallpaper images"
-  ON storage.objects FOR SELECT
+-- Note: Cannot disable RLS on storage.objects via SQL - manage via dashboard
+CREATE POLICY "Allow all on storage objects"
+  ON storage.objects FOR ALL
   USING (bucket_id = 'wallpapers');
 
-CREATE POLICY "Authenticated users can upload wallpapers"
-  ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'wallpapers' AND auth.role() = 'authenticated');
+-- User likes table
+CREATE TABLE user_likes (
+  user_id UUID NOT NULL,
+  wallpaper_id UUID NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  PRIMARY KEY (user_id, wallpaper_id)
+);
 
-CREATE POLICY "Users can update their own wallpaper images"
-  ON storage.objects FOR UPDATE
-  USING (bucket_id = 'wallpapers' AND auth.uid()::text = (storage.foldername(name))[1])
-  WITH CHECK (bucket_id = 'wallpapers' AND auth.uid()::text = (storage.foldername(name))[1]);
+-- Enable RLS
+ALTER TABLE user_likes ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can delete their own wallpaper images"
-  ON storage.objects FOR DELETE
-  USING (bucket_id = 'wallpapers' AND auth.uid()::text = (storage.foldername(name))[1]);
-
--- Functions and triggers
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  BEGIN
-    INSERT INTO user_profiles (id, email, is_verified)
-    VALUES (NEW.id, NEW.email, TRUE);
-  EXCEPTION WHEN OTHERS THEN
-    -- Log error but don't fail signup
-    RAISE WARNING 'Failed to create user profile for user %: %', NEW.id, SQLERRM;
-  END;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Drop trigger if exists
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
--- Temporarily disable the trigger - test signup first without it
--- CREATE TRIGGER on_auth_user_created
---   AFTER INSERT ON auth.users
---   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
-
--- Update user_profiles when email is verified (kept for compatibility)
-CREATE OR REPLACE FUNCTION update_user_verification()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.email_confirmed_at IS NOT NULL AND OLD.email_confirmed_at IS NULL THEN
-    UPDATE user_profiles
-    SET is_verified = TRUE, verified_at = NEW.email_confirmed_at
-    WHERE id = NEW.id;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_verified
-  AFTER UPDATE ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION update_user_verification();
+-- Policies
+CREATE POLICY "Allow all on user_likes"
+  ON user_likes FOR ALL
+  USING (true);
