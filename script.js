@@ -527,7 +527,11 @@ async function initializeApp() {
   if (filterBtn) {
     filterBtn.addEventListener('click', function() {
       searchInput.value = '';
-      setActiveChip(document.querySelector('.chip[data-filter="all"]'));
+      const defaultChip = document.querySelector('.chip[data-filter="all"]');
+      if (defaultChip) {
+        setActiveChip(defaultChip);
+      }
+      filterWallpapers(searchInput.value, activeFilter);
       searchInput.focus();
     });
   }
