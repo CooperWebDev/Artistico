@@ -1003,6 +1003,24 @@ async function initializeApp() {
       alert('Error deleting wallpaper');
     }
   }
+
+  // Make functions global for onclick
+  window.removeLike = removeLike;
+  window.deleteUpload = deleteUpload;
+  window.copyImageUrl = (url) => {
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Image URL copied to clipboard!');
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Image URL copied to clipboard!');
+    });
+  };
     const userData = localStorage.getItem('user');
     if (!userData) return;
     const user = JSON.parse(userData);
