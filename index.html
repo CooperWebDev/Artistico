@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anime Wallpaper Gallery</title>
+  <title>Wallpaper Gallery</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,7 +12,7 @@
     <div class="navbar-left">
       <div class="logo">
         <i class="fas fa-image"></i>
-        <span>Anime Walls</span>
+        <span>Walls</span>
       </div>
     </div>
     <ul class="navbar-links" id="nav-links">
@@ -68,8 +68,8 @@
     <section class="content-panel">
       <div class="top-bar">
         <div>
-          <p class="page-label">Anime Wallpapers</p>
-          <h1 class="page-title">Curated anime wallpapers for your device</h1>
+          <p class="page-label">Wallpapers</p>
+          <h1 class="page-title">Curated wallpapers for your device</h1>
         </div>
 
         <div class="top-actions">
@@ -80,17 +80,18 @@
       <section id="categories" class="search-area">
         <div class="search-panel">
           <i class="fas fa-search"></i>
-          <input type="search" placeholder="Search anime characters, scenes or styles..." id="search-input">
+          <input type="search" placeholder="Search wallpapers, themes or styles..." id="search-input">
           <button type="button" id="search-btn">Search</button>
         </div>
         <div class="chip-list">
           <button class="chip active" data-filter="all">All</button>
-          <button class="chip" data-filter="action">Action</button>
-          <button class="chip" data-filter="fantasy">Fantasy</button>
-          <button class="chip" data-filter="mecha">Mecha</button>
-          <button class="chip" data-filter="sliceoflife">Slice of Life</button>
-          <button class="chip" data-filter="fanart">Fanart</button>
-          <button class="chip" data-filter="movies">Movies</button>
+          <button class="chip" data-filter="nature">Nature</button>
+          <button class="chip" data-filter="abstract">Abstract</button>
+          <button class="chip" data-filter="city">City</button>
+          <button class="chip" data-filter="animals">Animals</button>
+          <button class="chip" data-filter="space">Space</button>
+          <button class="chip" data-filter="art">Art</button>
+          <button class="chip" data-filter="minimalist">Minimalist</button>
         </div>
       </section>
 
@@ -100,14 +101,14 @@
           <p>Loading wallpapers...</p>
         </div>
         <div id="no-wallpapers" class="empty-state" style="display: none;">
-          <p>No wallpapers uploaded yet. Be the first to share your anime art!</p>
+          <p>No wallpapers uploaded yet. Be the first to share your art!</p>
         </div>
       </section>
 
       <section id="about" class="about-panel">
         <div class="about-box">
-          <h2>About Anime Wallpapers</h2>
-          <p>This site features a curated collection of anime wallpapers. Browse scenes, characters, and fanart from classics, shonen hits, dramatic movies, and new releases to find the perfect background for your screen.</p>
+          <h2>About Wallpapers</h2>
+          <p>This site features a curated collection of wallpapers. Browse stunning images from nature, abstract art, cityscapes, and more to find the perfect background for your screen.</p>
         </div>
       </section>
     </section>
@@ -121,12 +122,12 @@
       <div class="auth-container">
         <div class="auth-header">
           <h2>Create Account</h2>
-          <p>Join our anime wallpaper community</p>
+          <p>Join our wallpaper community</p>
         </div>
         <form id="signup-form">
           <div class="form-group">
             <label for="signup-name">Username</label>
-            <input type="text" id="signup-name" required placeholder="animefan123">
+            <input type="text" id="signup-name" required placeholder="user123">
           </div>
           <div class="form-group">
             <label for="signup-email">Email</label>
@@ -185,12 +186,12 @@
       <div class="upload-container">
         <div class="upload-header">
           <h2>Upload Your Wallpaper</h2>
-          <p>Share your favorite anime artwork with the community</p>
+          <p>Share your favorite wallpapers with the community</p>
         </div>
         <form id="upload-form">
           <div class="form-group">
             <label for="upload-title">Title <span class="required">*</span></label>
-            <input type="text" id="upload-title" required placeholder="e.g., Midnight Sky - Naruto">
+            <input type="text" id="upload-title" required placeholder="e.g., Sunset Landscape">
           </div>
           <div class="form-group">
             <label for="upload-description">Description</label>
@@ -199,17 +200,18 @@
           <div class="form-group">
             <label for="upload-category">Category</label>
             <select id="upload-category">
-              <option value="fanart">Fanart</option>
-              <option value="action">Action</option>
-              <option value="fantasy">Fantasy</option>
-              <option value="mecha">Mecha</option>
-              <option value="sliceoflife">Slice of Life</option>
-              <option value="movies">Movies</option>
+              <option value="nature">Nature</option>
+              <option value="abstract">Abstract</option>
+              <option value="city">City</option>
+              <option value="animals">Animals</option>
+              <option value="space">Space</option>
+              <option value="art">Art</option>
+              <option value="minimalist">Minimalist</option>
             </select>
           </div>
           <div class="form-group">
             <label for="upload-tags">Tags (comma separated)</label>
-            <input type="text" id="upload-tags" placeholder="naruto, action, anime">
+            <input type="text" id="upload-tags" placeholder="nature, landscape, sunset">
           </div>
           <div class="form-group">
             <label for="upload-image">Image <span class="required">*</span></label>

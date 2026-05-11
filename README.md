@@ -1,6 +1,6 @@
-# Anime Walls - Professional Wallpaper Gallery
+# Walls - Professional Wallpaper Gallery
 
-A modern, full-featured anime wallpaper gallery with user authentication, image uploads, and professional UI.
+A modern, full-featured wallpaper gallery with user authentication, image uploads, and professional UI.
 
 ## Features
 

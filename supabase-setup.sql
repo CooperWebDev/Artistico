@@ -1,4 +1,4 @@
--- COMPLETE RESET: Supabase Database Setup for Anime Walls
+-- COMPLETE RESET: Supabase Database Setup for Walls
 -- This script DROPS everything first, then recreates from scratch
 
 -- STEP 1: DROP EVERYTHING (ignore errors if objects don't exist)
