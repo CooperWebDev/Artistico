@@ -363,6 +363,82 @@
     </section>
   </main>
 
+  <!-- Wallpaper Detail Modal -->
+  <div id="wallpaper-detail-modal" class="modal hidden">
+    <div class="modal-content detail-modal">
+      <button class="modal-close">&times;</button>
+      <div class="detail-modal-grid">
+        <!-- Image Section -->
+        <div class="detail-image-section">
+          <img id="detail-image" src="" alt="Wallpaper" class="detail-image">
+          <div class="detail-image-actions">
+            <button id="detail-like-btn" class="detail-action-btn">
+              <i class="fas fa-heart"></i> <span id="detail-likes-count">0</span>
+            </button>
+            <button id="detail-download-btn" class="detail-action-btn">
+              <i class="fas fa-download"></i> Download
+            </button>
+          </div>
+        </div>
+
+        <!-- Info & Comments Section -->
+        <div class="detail-info-section">
+          <!-- Creator Profile -->
+          <div class="creator-profile">
+            <img id="creator-avatar" src="" alt="Creator" class="creator-avatar">
+            <div class="creator-info">
+              <h3 id="creator-name">Creator</h3>
+              <p id="creator-bio" class="creator-bio"></p>
+              <button id="view-creator-work-btn" class="btn btn-secondary btn-sm">View Creator's Work</button>
+            </div>
+          </div>
+
+          <!-- Wallpaper Info -->
+          <div class="wallpaper-info">
+            <h2 id="detail-title">Wallpaper Title</h2>
+            <p id="detail-description" class="detail-description"></p>
+            <div class="wallpaper-meta">
+              <span class="meta-item">
+                <i class="fas fa-tag"></i> <span id="detail-category">Nature</span>
+              </span>
+              <span class="meta-item">
+                <i class="fas fa-calendar"></i> <span id="detail-date"></span>
+              </span>
+            </div>
+            <div class="tags-container">
+              <span id="detail-tags"></span>
+            </div>
+          </div>
+
+          <!-- Comments Section -->
+          <div class="comments-section">
+            <h3>Comments (<span id="comments-count">0</span>)</h3>
+            
+            <!-- Add Comment Form -->
+            <div id="add-comment-form" class="add-comment-form hidden">
+              <textarea id="comment-input" placeholder="Add a comment..." rows="3" maxlength="500"></textarea>
+              <div class="comment-form-actions">
+                <button id="submit-comment-btn" class="btn btn-primary btn-sm">Post Comment</button>
+                <button id="cancel-comment-btn" class="btn btn-secondary btn-sm">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Comments List -->
+            <div id="comments-list" class="comments-list">
+              <p>No comments yet. Be the first to comment!</p>
+            </div>
+          </div>
+
+          <!-- Login Prompt for Comments -->
+          <div id="login-prompt-comments" class="login-prompt hidden">
+            <p>Sign in to add a comment</p>
+            <button id="comment-login-btn" class="btn btn-primary btn-sm">Sign In</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="script.js"></script>
 </body>

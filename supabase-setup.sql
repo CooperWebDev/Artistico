@@ -142,3 +142,21 @@ ALTER TABLE user_likes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all on user_likes"
   ON user_likes FOR ALL
   USING (true);
+
+-- Comments table
+CREATE TABLE comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wallpaper_id UUID NOT NULL REFERENCES wallpapers(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Enable RLS on comments
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+
+-- Comments policies
+CREATE POLICY "Allow all on comments"
+  ON comments FOR ALL
+  USING (true);

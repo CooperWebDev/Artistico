@@ -121,7 +121,7 @@ function initializeApp() {
       // Check if liked
       const { data: existingLike, error: selectError } = await supabaseClient
         .from('user_likes')
-        .select('id')
+        .select('user_id')
         .eq('user_id', user.id)
         .eq('wallpaper_id', wallpaperId)
         .single();
@@ -185,6 +185,8 @@ function initializeApp() {
     img.src = wallpaper.image_url;
     img.alt = wallpaper.title;
     img.loading = 'lazy';
+    img.addEventListener('click', () => openWallpaperDetail(wallpaper.id));
+    img.style.cursor = 'pointer';
 
     const overlay = document.createElement('div');
     overlay.className = 'photo-overlay';
@@ -215,6 +217,318 @@ function initializeApp() {
     card.appendChild(img);
     card.appendChild(overlay);
     return card;
+  }
+
+  // ============ WALLPAPER DETAIL MODAL ============
+  async function openWallpaperDetail(wallpaperId) {
+    try {
+      // Get wallpaper details
+      const { data: wallpaper, error } = await supabaseClient
+        .from('wallpapers')
+        .select('*')
+        .eq('id', wallpaperId)
+        .single();
+
+      if (error) throw error;
+      if (!wallpaper) throw new Error('Wallpaper not found');
+
+      // Get creator profile
+      const { data: creator, error: creatorError } = await supabaseClient
+        .from('user_profiles')
+        .select('*')
+        .eq('id', wallpaper.user_id)
+        .single();
+
+      if (creatorError) console.error('Error loading creator:', creatorError);
+
+      // Load comments
+      await loadCommentsForWallpaper(wallpaperId);
+
+      // Populate modal
+      document.getElementById('detail-image').src = wallpaper.image_url;
+      document.getElementById('detail-title').textContent = wallpaper.title;
+      document.getElementById('detail-description').textContent = wallpaper.description || 'No description provided';
+      document.getElementById('detail-category').textContent = wallpaper.category || 'Uncategorized';
+      document.getElementById('detail-date').textContent = new Date(wallpaper.created_at).toLocaleDateString();
+      document.getElementById('detail-likes-count').textContent = wallpaper.likes_count || 0;
+
+      // Tags
+      const tagsContainer = document.getElementById('detail-tags');
+      if (wallpaper.tags && wallpaper.tags.length > 0) {
+        tagsContainer.innerHTML = wallpaper.tags.map(tag => `<span>${tag}</span>`).join('');
+      } else {
+        tagsContainer.innerHTML = '';
+      }
+
+      // Creator info
+      if (creator) {
+        document.getElementById('creator-avatar').src = creator.avatar_url || 'https://via.placeholder.com/60?text=Avatar';
+        document.getElementById('creator-name').textContent = creator.username || creator.email;
+        document.getElementById('creator-bio').textContent = creator.bio || 'No bio provided';
+      }
+
+      // Like button state
+      const likeBtn = document.getElementById('detail-like-btn');
+      likeBtn.dataset.wallpaperId = wallpaperId;
+      if (userLikes.has(wallpaperId)) {
+        likeBtn.classList.add('liked');
+      } else {
+        likeBtn.classList.remove('liked');
+      }
+
+      // Store current creator for "View Work" button
+      window.currentCreatorId = wallpaper.user_id;
+
+      // Setup modal close
+      const modal = document.getElementById('wallpaper-detail-modal');
+      modal.classList.remove('hidden');
+
+      // Show comment form or login prompt based on auth status
+      const userData = localStorage.getItem('user');
+      const addCommentForm = document.getElementById('add-comment-form');
+      const loginPrompt = document.getElementById('login-prompt-comments');
+      
+      if (userData) {
+        addCommentForm.classList.remove('hidden');
+        loginPrompt.classList.add('hidden');
+      } else {
+        addCommentForm.classList.add('hidden');
+        loginPrompt.classList.remove('hidden');
+      }
+
+    } catch (error) {
+      console.error('Error opening wallpaper detail:', error);
+      alert('Error loading wallpaper details');
+    }
+  }
+
+  async function loadCommentsForWallpaper(wallpaperId) {
+    try {
+      const { data: comments, error } = await supabaseClient
+        .from('comments')
+        .select(`
+          id,
+          content,
+          created_at,
+          user_id,
+          user_profiles(username, avatar_url)
+        `)
+        .eq('wallpaper_id', wallpaperId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const commentsList = document.getElementById('comments-list');
+      document.getElementById('comments-count').textContent = comments?.length || 0;
+
+      if (!comments || comments.length === 0) {
+        commentsList.innerHTML = '<p>No comments yet. Be the first to comment!</p>';
+        return;
+      }
+
+      commentsList.innerHTML = comments.map(comment => {
+        const userProfile = Array.isArray(comment.user_profiles) ? comment.user_profiles[0] : comment.user_profiles;
+        return `
+        <div class="comment">
+          <div class="comment-header">
+            <img src="${userProfile?.avatar_url || 'https://via.placeholder.com/32?text=User'}" alt="User" class="comment-avatar">
+            <span class="comment-author">${userProfile?.username || 'Anonymous'}</span>
+            <span class="comment-date">${new Date(comment.created_at).toLocaleDateString()}</span>
+          </div>
+          <p class="comment-content">${comment.content}</p>
+        </div>
+      `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
+  }
+
+  function setupDetailModalListeners() {
+    const modal = document.getElementById('wallpaper-detail-modal');
+    const closeBtn = modal.querySelector('.modal-close');
+    const likeBtn = document.getElementById('detail-like-btn');
+    const downloadBtn = document.getElementById('detail-download-btn');
+    const addCommentBtn = document.getElementById('comment-input');
+    const submitCommentBtn = document.getElementById('submit-comment-btn');
+    const cancelCommentBtn = document.getElementById('cancel-comment-btn');
+    const viewCreatorBtn = document.getElementById('view-creator-work-btn');
+    const commentLoginBtn = document.getElementById('comment-login-btn');
+    const loginPrompt = document.getElementById('login-prompt-comments');
+    const addCommentForm = document.getElementById('add-comment-form');
+
+    // Close modal
+    closeBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      document.getElementById('comment-input').value = '';
+      addCommentForm.classList.add('hidden');
+    });
+
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+        document.getElementById('comment-input').value = '';
+        addCommentForm.classList.add('hidden');
+      }
+    });
+
+    // Like button
+    likeBtn.addEventListener('click', async () => {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        alert('Please log in to like wallpapers');
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const wallpaperId = likeBtn.dataset.wallpaperId;
+
+      try {
+        const { data: existingLike, error: selectError } = await supabaseClient
+          .from('user_likes')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .eq('wallpaper_id', wallpaperId)
+          .single();
+
+        let isLiked = false;
+        if (selectError && selectError.code !== 'PGRST116') {
+          throw selectError;
+        }
+        isLiked = !selectError && existingLike;
+
+        if (isLiked) {
+          const { error } = await supabaseClient
+            .from('user_likes')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('wallpaper_id', wallpaperId);
+          if (error) throw error;
+          userLikes.delete(wallpaperId);
+        } else {
+          const { error } = await supabaseClient
+            .from('user_likes')
+            .insert({ user_id: user.id, wallpaper_id: wallpaperId });
+          if (error) throw error;
+          userLikes.add(wallpaperId);
+        }
+
+        // Update likes count
+        const { data: wallpaper } = await supabaseClient
+          .from('wallpapers')
+          .select('likes_count')
+          .eq('id', wallpaperId)
+          .single();
+
+        const increment = isLiked ? -1 : 1;
+        const newCount = Math.max(0, (wallpaper?.likes_count || 0) + increment);
+
+        const { error: updateError } = await supabaseClient
+          .from('wallpapers')
+          .update({ likes_count: newCount })
+          .eq('id', wallpaperId);
+        if (updateError) throw updateError;
+
+        document.getElementById('detail-likes-count').textContent = newCount;
+        likeBtn.classList.toggle('liked', !isLiked);
+
+      } catch (error) {
+        console.error('Like error:', error);
+        alert('Error updating like');
+      }
+    });
+
+    // Download button
+    downloadBtn.addEventListener('click', () => {
+      const img = document.getElementById('detail-image');
+      const link = document.createElement('a');
+      link.href = img.src;
+      link.download = 'wallpaper';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // Comment form handling
+    addCommentBtn.addEventListener('focus', () => {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        addCommentForm.classList.add('hidden');
+        loginPrompt.classList.remove('hidden');
+      } else {
+        addCommentForm.classList.remove('hidden');
+        loginPrompt.classList.add('hidden');
+      }
+    });
+
+    // Submit comment
+    submitCommentBtn.addEventListener('click', async () => {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        alert('Please log in to comment');
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const content = document.getElementById('comment-input').value.trim();
+      const wallpaperId = likeBtn.dataset.wallpaperId;
+
+      if (!content) {
+        alert('Please enter a comment');
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient
+          .from('comments')
+          .insert({
+            wallpaper_id: wallpaperId,
+            user_id: user.id,
+            content
+          });
+
+        if (error) throw error;
+
+        // Clear form and reload comments
+        document.getElementById('comment-input').value = '';
+        await loadCommentsForWallpaper(wallpaperId);
+
+      } catch (error) {
+        console.error('Error posting comment:', error);
+        alert('Error posting comment: ' + error.message);
+      }
+    });
+
+    // Cancel comment
+    cancelCommentBtn.addEventListener('click', () => {
+      document.getElementById('comment-input').value = '';
+      addCommentForm.classList.add('hidden');
+    });
+
+    // View creator's work
+    viewCreatorBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      filterWallpapersByCreator(window.currentCreatorId);
+    });
+
+    // Comment login button
+    commentLoginBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      document.getElementById('login-btn').click();
+    });
+  }
+
+  function filterWallpapersByCreator(creatorId) {
+    const creatorWallpapers = allWallpapers.filter(w => w.user_id === creatorId);
+    if (creatorWallpapers.length === 0) {
+      document.getElementById('no-wallpapers').style.display = 'block';
+      document.getElementById('wallpapers').innerHTML = '';
+      return;
+    }
+    displayWallpapers(creatorWallpapers);
+    showPage('home');
   }
 
   // ============ FILTER WALLPAPERS ============
@@ -898,6 +1212,7 @@ function initializeApp() {
   // Initialize
   checkAuthStatus();
   loadWallpapers();
+  setupDetailModalListeners();
 }
 
 // Start the app when DOM is ready
