@@ -604,16 +604,8 @@ async function initializeApp() {
         showPage('favorites-page');
         loadUserFavorites();
       } else if (action === 'profile') {
-        showPage('profile-page');
-      } else if (action === 'filter') {
-        // Reset filter
-        searchInput.value = '';
-        const defaultChip = document.querySelector('.chip[data-filter="all"]');
-        if (defaultChip) {
-          setActiveChip(defaultChip);
-        }
-        filterWallpapers(searchInput.value, activeFilter);
-        searchInput.focus();
+        showPage('my-uploads-page');
+        loadUserUploads();
       }
     });
   });
@@ -806,8 +798,7 @@ async function initializeApp() {
 
   // My Uploads button in user menu
   document.getElementById('my-uploads-btn')?.addEventListener('click', () => {
-    showPage('my-uploads-page');
-    loadUserUploads();
+    showPage('profile-page');
   });
 
   // ============ UPLOAD FILE HANDLING ============
@@ -962,7 +953,56 @@ async function initializeApp() {
     }
   });
 
-  async function loadUserFavorites() {
+  async function removeLike(wallpaperId) {
+    const userData = localStorage.getItem('user');
+    if (!userData) return;
+    const user = JSON.parse(userData);
+
+    try {
+      const { error } = await supabaseClient
+        .from('user_likes')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('wallpaper_id', wallpaperId);
+      if (error) throw error;
+
+      // Update likes count
+      const { data: wallpaper } = await supabaseClient
+        .from('wallpapers')
+        .select('likes_count')
+        .eq('id', wallpaperId)
+        .single();
+      const newCount = Math.max(0, (wallpaper?.likes_count || 0) - 1);
+      await supabaseClient
+        .from('wallpapers')
+        .update({ likes_count: newCount })
+        .eq('id', wallpaperId);
+
+      // Reload favorites
+      loadUserFavorites();
+    } catch (error) {
+      console.error('Error removing like:', error);
+      alert('Error removing like');
+    }
+  }
+
+  async function deleteUpload(wallpaperId) {
+    if (!confirm('Are you sure you want to delete this wallpaper? This action cannot be undone.')) return;
+
+    try {
+      const { error } = await supabaseClient
+        .from('wallpapers')
+        .delete()
+        .eq('id', wallpaperId);
+      if (error) throw error;
+
+      // Reload uploads
+      loadUserUploads();
+    } catch (error) {
+      console.error('Error deleting upload:', error);
+      alert('Error deleting wallpaper');
+    }
+  }
     const userData = localStorage.getItem('user');
     if (!userData) return;
     const user = JSON.parse(userData);
@@ -998,6 +1038,7 @@ async function initializeApp() {
           </div>
           <div class="upload-actions">
             <button class="btn btn-sm btn-secondary" onclick="copyImageUrl('${wallpaper.image_url}')">Copy URL</button>
+            <button class="btn btn-sm btn-danger" onclick="removeLike('${wallpaper.id}')">Remove</button>
           </div>
         </div>
       `).join('');
@@ -1030,18 +1071,15 @@ async function initializeApp() {
       }
 
       uploadsList.innerHTML = uploads.map(upload => `
-        <div class="upload-item">
-          <img src="${upload.image_url}" alt="${upload.title}" class="upload-thumbnail">
-          <div class="upload-info">
-            <h5>${upload.title}</h5>
-            <p>${upload.description || 'No description'}</p>
-            <small>Category: ${upload.category} | Uploaded: ${new Date(upload.created_at).toLocaleDateString()}</small>
+        <article class="photo-card" data-id="${upload.id}">
+          <img src="${upload.image_url}" alt="${upload.title}" loading="lazy" onclick="openWallpaperDetail('${upload.id}')" style="cursor: pointer;">
+          <div class="photo-overlay">
+            <h3>${upload.title}</h3>
+            <div class="photo-actions">
+              <button class="btn btn-sm btn-danger" onclick="deleteUpload('${upload.id}')">Delete</button>
+            </div>
           </div>
-          <div class="upload-actions">
-            <button class="btn btn-sm btn-secondary" onclick="copyImageUrl('${upload.image_url}')">Copy URL</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteUpload('${upload.id}')">Delete</button>
-          </div>
-        </div>
+        </article>
       `).join('');
 
     } catch (error) {
