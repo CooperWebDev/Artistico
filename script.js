@@ -604,7 +604,8 @@ async function initializeApp() {
         showPage('favorites-page');
         loadUserFavorites();
       } else if (action === 'profile') {
-        showPage('profile-page');
+        showPage('my-uploads-page');
+        loadUserUploads();
       }
     });
   });
@@ -796,9 +797,8 @@ async function initializeApp() {
   });
 
   // My Uploads button in user menu
-  document.getElementById('my-uploads-btn')?.addEventListener('click', () => {
-    showPage('my-uploads-page');
-    loadUserUploads();
+  document.getElementById('profile-menu-btn')?.addEventListener('click', () => {
+    showPage('profile-page');
   });
 
   // ============ UPLOAD FILE HANDLING ============
