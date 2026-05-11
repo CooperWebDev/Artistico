@@ -126,7 +126,12 @@ function initializeApp() {
         .eq('wallpaper_id', wallpaperId)
         .single();
 
-      let isLiked = !selectError && existingLike;
+      // Only treat as a real error if it's not a "no rows" error
+      let isLiked = false;
+      if (selectError && selectError.code !== 'PGRST116') {
+        throw selectError;
+      }
+      isLiked = !selectError && existingLike;
 
       if (isLiked) {
         // Unlike
