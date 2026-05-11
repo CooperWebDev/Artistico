@@ -76,8 +76,8 @@ ON CONFLICT (id) DO NOTHING;
 -- Users table extension
 CREATE TABLE user_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT UNIQUE NOT NULL,
-  username TEXT UNIQUE,
+  email TEXT,
+  username TEXT,
   avatar_url TEXT,
   bio TEXT,
   is_verified BOOLEAN DEFAULT TRUE,
@@ -86,21 +86,8 @@ CREATE TABLE user_profiles (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Disable RLS for user_profiles to allow trigger inserts
+-- Disable RLS for user_profiles to allow trigger inserts and direct updates
 ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
-
--- If RLS is enabled later, allow authenticated users to manage their own profile row.
-CREATE POLICY "Authenticated users can insert their own profile"
-  ON user_profiles FOR INSERT
-  WITH CHECK (auth.uid() = id AND auth.role() = 'authenticated');
-
-CREATE POLICY "Authenticated users can select their own profile"
-  ON user_profiles FOR SELECT
-  USING (auth.uid() = id);
-
-CREATE POLICY "Authenticated users can update their own profile"
-  ON user_profiles FOR UPDATE
-  USING (auth.uid() = id);
 
 -- Wallpapers table
 CREATE TABLE wallpapers (
@@ -137,7 +124,8 @@ CREATE POLICY "Authenticated users can insert wallpapers"
 
 CREATE POLICY "Users can update their own wallpapers"
   ON wallpapers FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own wallpapers"
   ON wallpapers FOR DELETE
@@ -154,7 +142,8 @@ CREATE POLICY "Authenticated users can upload wallpapers"
 
 CREATE POLICY "Users can update their own wallpaper images"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'wallpapers' AND auth.uid()::text = (storage.foldername(name))[1]);
+  USING (bucket_id = 'wallpapers' AND auth.uid()::text = (storage.foldername(name))[1])
+  WITH CHECK (bucket_id = 'wallpapers' AND auth.uid()::text = (storage.foldername(name))[1]);
 
 CREATE POLICY "Users can delete their own wallpaper images"
   ON storage.objects FOR DELETE
@@ -178,9 +167,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Drop trigger if exists
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+-- Temporarily disable the trigger - test signup first without it
+-- CREATE TRIGGER on_auth_user_created
+--   AFTER INSERT ON auth.users
+--   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 -- Update user_profiles when email is verified (kept for compatibility)
 CREATE OR REPLACE FUNCTION update_user_verification()

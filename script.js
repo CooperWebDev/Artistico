@@ -79,7 +79,7 @@ function initializeApp() {
   function createWallpaperCard(wallpaper) {
     const card = document.createElement('article');
     card.className = 'photo-card';
-    card.dataset.tags = (wallpaper.tags || []).join(' ') + ' ' + (wallpaper.category || 'fanart');
+    card.dataset.tags = (wallpaper.tags || []).join(' ') + ' ' + (wallpaper.category || 'nature');
 
     const img = document.createElement('img');
     img.src = wallpaper.image_url;
@@ -95,7 +95,7 @@ function initializeApp() {
     const searchTerm = query.toLowerCase().trim();
 
     const filteredWallpapers = allWallpapers.filter(wallpaper => {
-      const tags = ((wallpaper.tags || []).join(' ') + ' ' + (wallpaper.category || 'fanart')).toLowerCase();
+      const tags = ((wallpaper.tags || []).join(' ') + ' ' + (wallpaper.category || 'nature')).toLowerCase();
       const title = (wallpaper.title || '').toLowerCase();
       const description = (wallpaper.description || '').toLowerCase();
 
