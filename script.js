@@ -135,11 +135,43 @@ function initializeApp() {
     document.getElementById('user-menu').classList.add('hidden');
   }
 
+  async function ensureUserProfile(user) {
+    if (!user?.id) return;
+
+    const { data: existingProfile, error: selectError } = await supabaseClient
+      .from('user_profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (selectError && selectError.code !== 'PGRST116') {
+      console.warn('Could not check user profile:', selectError.message);
+      return;
+    }
+
+    if (!existingProfile) {
+      const { error: insertError } = await supabaseClient
+        .from('user_profiles')
+        .insert({
+          id: user.id,
+          email: user.email,
+          username: user.user_metadata?.username || user.email,
+          is_verified: true,
+        });
+
+      if (insertError) {
+        console.warn('Could not insert missing user profile:', insertError.message);
+      }
+    }
+  }
+
   async function displayUserMenu(user) {
     document.getElementById('signup-btn').classList.add('hidden');
     document.getElementById('login-btn').classList.add('hidden');
     document.getElementById('user-menu').classList.remove('hidden');
     
+    await ensureUserProfile(user);
+
     const { data } = await supabaseClient
       .from('user_profiles')
       .select('*')
