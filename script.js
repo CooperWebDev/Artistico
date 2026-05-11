@@ -7,8 +7,8 @@ function initializeApp() {
   }
 
   // Supabase setup - Replace with your actual keys
-  const supabaseUrl = 'https://lkjfkbififhwgvamffir.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxramZrYmlmaWZod2d2YW1mZmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTE4OTcsImV4cCI6MjA5MTk4Nzg5N30.96SQDKM-AQ_CIyXTQsv3CG9etJDqnexEMADqWnQDTyw';
+  const supabaseUrl = 'https://gaaatmmreteqdpsxsvyw.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhYWF0bW1yZXRlcWRwc3hzdnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MzM4MDgsImV4cCI6MjA5NDAwOTgwOH0.Y6-R5x6xmBSAW7hcpKc9uHcfNQ739ajnxghmbug45t8';
   const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   // Backend URL - change this when deploying
