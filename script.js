@@ -27,8 +27,21 @@ function initializeApp() {
   const emptyState = document.getElementById('no-wallpapers');
   const userTrigger = document.getElementById('user-trigger');
 
+  const pages = ['home', 'upload-page', 'favorites-page', 'my-uploads-page', 'profile-page'];
+
   let allWallpapers = [];
   let userLikes = new Set();
+  let userMenuOpen = false;
+
+  function showPage(pageId) {
+    pages.forEach(id => {
+      const page = document.getElementById(id);
+      if (!page) return;
+      page.classList.toggle('hidden', id !== pageId);
+    });
+    document.getElementById('user-menu')?.classList.add('hidden');
+    userMenuOpen = false;
+  }
 
   async function loadUserLikes() {
     const userData = localStorage.getItem('user');
@@ -251,7 +264,6 @@ function initializeApp() {
     document.getElementById('user-menu').classList.add('hidden');
     userMenuOpen = false;
     
-    // Trigger avatar
     const triggerAvatarImg = document.getElementById('trigger-avatar');
     const triggerAvatarContainer = triggerAvatarImg.parentElement;
     if (user.avatar_url) {
@@ -276,39 +288,22 @@ function initializeApp() {
     document.getElementById('trigger-name').textContent = user.username || user.email;
     document.getElementById('trigger-email').textContent = user.email;
 
-    // Dropdown content
-    const avatarImg = document.getElementById('user-avatar');
-    const avatarContainer = avatarImg.parentElement;
-    if (user.avatar_url) {
-      avatarImg.src = user.avatar_url;
-      avatarImg.style.display = 'block';
-      const letterDiv = avatarContainer.querySelector('.avatar-letter');
-      if (letterDiv) letterDiv.remove();
-    } else {
-      avatarImg.style.display = 'none';
-      let letterDiv = avatarContainer.querySelector('.avatar-letter');
-      if (!letterDiv) {
-        letterDiv = document.createElement('div');
-        letterDiv.className = 'avatar-letter';
-        avatarContainer.insertBefore(letterDiv, avatarImg.nextSibling);
+    const profileAvatarImg = document.getElementById('profile-avatar');
+    if (profileAvatarImg) {
+      if (user.avatar_url) {
+        profileAvatarImg.src = user.avatar_url;
+        profileAvatarImg.style.display = 'block';
+      } else {
+        profileAvatarImg.style.display = 'block';
       }
-      const firstLetter = (user.username || user.email || 'U').charAt(0).toUpperCase();
-      letterDiv.textContent = firstLetter;
-      const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
-      letterDiv.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
     }
 
-    document.getElementById('user-name').textContent = user.username || user.email;
-    document.getElementById('user-email').textContent = user.email;
-
-    document.getElementById('profile-username-input').value = user.username || '';
-    document.getElementById('profile-email').textContent = user.email;
-    if (user.avatar_url) {
-      document.getElementById('profile-avatar').src = user.avatar_url;
-    }
-    if (user.bio) {
-      document.getElementById('profile-bio').value = user.bio;
-    }
+    const usernameInput = document.getElementById('profile-username-input');
+    if (usernameInput) usernameInput.value = user.username || '';
+    const profileEmail = document.getElementById('profile-email');
+    if (profileEmail) profileEmail.textContent = user.email;
+    const profileBio = document.getElementById('profile-bio');
+    if (profileBio) profileBio.value = user.bio || '';
   }
 
   chips.forEach(chip => {
@@ -350,7 +345,7 @@ function initializeApp() {
 
       // If it's the settings cog (last one, index 4)
       if (index === 4) {
-        document.getElementById('settings-panel').classList.toggle('hidden');
+        showPage('profile-page');
       }
     });
   });
@@ -520,7 +515,6 @@ function initializeApp() {
   });
 
   // ============ USER MENU TOGGLE ============
-  let userMenuOpen = false;
   
   // Toggle user menu when clicking on profile trigger
   userTrigger?.addEventListener('click', (e) => {
@@ -544,41 +538,24 @@ function initializeApp() {
 
   // Settings button in user menu
   document.getElementById('settings-btn')?.addEventListener('click', () => {
-    document.getElementById('settings-panel').classList.remove('hidden');
-    document.getElementById('user-menu').classList.add('hidden');
-    userMenuOpen = false;
+    showPage('profile-page');
   });
 
   // Favorites button in user menu
   document.getElementById('favorites-btn')?.addEventListener('click', () => {
-    const settingsPanel = document.getElementById('settings-panel');
-    settingsPanel.classList.remove('hidden');
-    
-    // Switch to favorites tab
-    document.querySelectorAll('.settings-tab').forEach(tab => {
-      tab.classList.remove('active');
-      if (tab.dataset.tab === 'favorites') {
-        tab.classList.add('active');
-      }
-    });
-    
-    document.querySelectorAll('.settings-tab-content').forEach(content => {
-      content.classList.remove('active');
-    });
-    document.getElementById('favorites-tab').classList.add('active');
-    
+    showPage('favorites-page');
     loadUserFavorites();
-    document.getElementById('user-menu').classList.add('hidden');
-    userMenuOpen = false;
+  });
+
+  // My Uploads button in user menu
+  document.getElementById('my-uploads-btn')?.addEventListener('click', () => {
+    showPage('my-uploads-page');
+    loadUserUploads();
   });
 
   // ============ UPLOAD FUNCTIONALITY ============
-  document.getElementById('upload-wallpaper-btn').addEventListener('click', () => {
-    const uploadModal = document.getElementById('upload-modal');
-    if (uploadModal) {
-      uploadModal.classList.remove('hidden');
-      document.getElementById('user-menu').classList.add('hidden');
-    }
+  document.getElementById('upload-wallpaper-btn')?.addEventListener('click', () => {
+    showPage('upload-page');
   });
 
   // ============ UPLOAD FILE HANDLING ============
@@ -713,7 +690,7 @@ function initializeApp() {
 
       setTimeout(() => {
         alert('Wallpaper uploaded successfully!');
-        document.getElementById('upload-modal').classList.add('hidden');
+        showPage('home');
         uploadForm.reset();
         uploadPreview.classList.add('hidden');
         progressDiv.classList.add('hidden');
@@ -733,35 +710,6 @@ function initializeApp() {
     }
   });
 
-  // Settings panel
-  const settingsPanel = document.getElementById('settings-panel');
-  const closeSettings = document.getElementById('close-settings');
-  const darkModeToggle = document.getElementById('dark-mode-toggle');
-  const settingsTabs = document.querySelectorAll('.settings-tab');
-  const tabContents = document.querySelectorAll('.settings-tab-content');
-
-  // Settings tabs functionality
-  settingsTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const tabName = tab.dataset.tab;
-      
-      // Update active tab
-      settingsTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-
-      // Update active content
-      tabContents.forEach(content => content.classList.remove('active'));
-      document.getElementById(tabName + '-tab').classList.add('active');
-
-      // Load content if needed
-      if (tabName === 'uploads') {
-        loadUserUploads();
-      } else if (tabName === 'favorites') {
-        loadUserFavorites();
-      }
-    });
-  });
-
   async function loadUserFavorites() {
     const userData = localStorage.getItem('user');
     if (!userData) return;
@@ -776,7 +724,7 @@ function initializeApp() {
       if (error) throw error;
 
       if (!likes || likes.length === 0) {
-        document.getElementById('user-favorites-list').innerHTML = '<p>You haven\'t liked any wallpapers yet.</p>';
+        document.getElementById('favorites-list').innerHTML = '<p>You haven\'t liked any wallpapers yet.</p>';
         return;
       }
 
@@ -788,7 +736,7 @@ function initializeApp() {
 
       if (wpError) throw wpError;
 
-      document.getElementById('user-favorites-list').innerHTML = wallpapers.map(wallpaper => `
+      document.getElementById('favorites-list').innerHTML = wallpapers.map(wallpaper => `
         <div class="upload-item">
           <img src="${wallpaper.image_url}" alt="${wallpaper.title}" class="upload-thumbnail">
           <div class="upload-info">
@@ -804,7 +752,7 @@ function initializeApp() {
 
     } catch (error) {
       console.error('Error loading favorites:', error);
-      document.getElementById('user-favorites-list').innerHTML = '<p>Error loading favorites</p>';
+      document.getElementById('favorites-list').innerHTML = '<p>Error loading favorites</p>';
     }
   }
 
@@ -929,30 +877,10 @@ function initializeApp() {
     }
   });
 
-  if (closeSettings) {
-    closeSettings.addEventListener('click', () => {
-      settingsPanel.classList.add('hidden');
-    });
-  }
-
-  if (darkModeToggle) {
-    darkModeToggle.addEventListener('change', () => {
-      document.body.classList.toggle('dark-mode');
-      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-    });
-  }
-
-  // Close settings on outside click
-  if (settingsPanel) {
-    settingsPanel.addEventListener('click', (e) => {
-      if (e.target === settingsPanel) {
-        settingsPanel.classList.add('hidden');
-      }
-    });
-  }
-
   document.querySelectorAll('.navbar-links a').forEach(link => {
-    link.addEventListener('click', function() {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      showPage('home');
       document.querySelectorAll('.navbar-links a').forEach(el => el.classList.remove('active'));
       this.classList.add('active');
     });

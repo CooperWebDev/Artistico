@@ -35,13 +35,6 @@
         </div>
       </button>
       <div id="user-menu" class="user-menu hidden">
-        <div class="user-profile">
-          <img id="user-avatar" src="" alt="Avatar" class="avatar">
-          <div>
-            <p id="user-name"></p>
-            <small id="user-email"></small>
-          </div>
-        </div>
         <button id="upload-wallpaper-btn" class="menu-item">
           <i class="fas fa-upload"></i> Upload Wallpaper
         </button>
@@ -52,7 +45,7 @@
           <i class="fas fa-heart"></i> Favorites
         </button>
         <button id="settings-btn" class="menu-item">
-          <i class="fas fa-cog"></i> Settings
+          <i class="fas fa-user-cog"></i> Profile
         </button>
         <hr>
         <button id="logout-btn" class="menu-item text-danger">
@@ -189,10 +182,26 @@
     </div>
   </div>
 
-  <!-- Upload Modal -->
-  <div id="upload-modal" class="modal hidden">
-    <div class="modal-content upload-modal">
-      <button class="modal-close">&times;</button>
+  <main id="upload-page" class="page-grid hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fas fa-thumbtack"></i>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#home" class="sidebar-link active"><i class="fas fa-home"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-bell"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-plus-square"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-comment-dots"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-cog"></i></a>
+      </nav>
+    </aside>
+    <section class="content-panel">
+      <div class="top-bar">
+        <div>
+          <p class="page-label">Upload</p>
+          <h1 class="page-title">Share your artwork with the community</h1>
+        </div>
+      </div>
       <div class="upload-container">
         <div class="upload-header">
           <h2>Upload Your Wallpaper</h2>
@@ -252,80 +261,107 @@
           <div id="upload-error" class="error-message" style="display: none;"></div>
         </form>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <div id="settings-panel" class="settings-panel modal hidden">
-    <div class="settings-content">
-      <div class="settings-header">
-        <h3>Account Settings</h3>
-        <button id="close-settings" class="modal-close">&times;</button>
+  <main id="favorites-page" class="page-grid hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fas fa-thumbtack"></i>
       </div>
-      <div class="settings-tabs">
-        <button class="settings-tab active" data-tab="profile">Profile</button>
-        <button class="settings-tab" data-tab="uploads">My Uploads</button>
-        <button class="settings-tab" data-tab="favorites">Favorites</button>
-        <button class="settings-tab" data-tab="preferences">Preferences</button>
+      <nav class="sidebar-nav">
+        <a href="#home" class="sidebar-link active"><i class="fas fa-home"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-bell"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-plus-square"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-comment-dots"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-cog"></i></a>
+      </nav>
+    </aside>
+    <section class="content-panel">
+      <div class="top-bar">
+        <div>
+          <p class="page-label">Favorites</p>
+          <h1 class="page-title">Your favorite wallpapers</h1>
+        </div>
       </div>
-      
-      <!-- Profile Tab -->
-      <div class="settings-tab-content active" id="profile-tab">
-        <div class="profile-section">
-          <h4>Profile Information</h4>
-          <div class="profile-avatar-section">
-            <img id="profile-avatar" src="" alt="Profile Avatar" class="profile-avatar">
-            <div>
-              <input type="text" id="profile-username-input" class="profile-username-input" placeholder="Username">
-              <p id="profile-email" class="profile-email"></p>
-            </div>
+      <section id="favorites-list" class="gallery-grid">
+        <div id="favorites-loading" class="loading-state">
+          <p>Loading favorites...</p>
+        </div>
+        <div id="favorites-empty" class="empty-state hidden">
+          <p>You haven't liked any wallpapers yet.</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <main id="my-uploads-page" class="page-grid hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fas fa-thumbtack"></i>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#home" class="sidebar-link active"><i class="fas fa-home"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-bell"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-plus-square"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-comment-dots"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-cog"></i></a>
+      </nav>
+    </aside>
+    <section class="content-panel">
+      <div class="top-bar">
+        <div>
+          <p class="page-label">My Uploads</p>
+          <h1 class="page-title">Your uploaded wallpapers</h1>
+        </div>
+      </div>
+      <div id="user-uploads-list" class="uploads-list">
+        <p>Loading your uploads...</p>
+      </div>
+    </section>
+  </main>
+
+  <main id="profile-page" class="page-grid hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fas fa-thumbtack"></i>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#home" class="sidebar-link active"><i class="fas fa-home"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-bell"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-plus-square"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-comment-dots"></i></a>
+        <a href="#" class="sidebar-link"><i class="fas fa-cog"></i></a>
+      </nav>
+    </aside>
+    <section class="content-panel">
+      <div class="top-bar">
+        <div>
+          <p class="page-label">Profile</p>
+          <h1 class="page-title">Manage your account</h1>
+        </div>
+      </div>
+      <div class="profile-section">
+        <h4>Profile Information</h4>
+        <div class="profile-avatar-section">
+          <img id="profile-avatar" src="" alt="Profile Avatar" class="profile-avatar">
+          <div>
+            <input type="text" id="profile-username-input" class="profile-username-input" placeholder="Username">
+            <p id="profile-email" class="profile-email"></p>
           </div>
-          <div class="form-group">
-            <label for="profile-avatar-upload">Avatar</label>
-            <input type="file" id="profile-avatar-upload" accept="image/*">
-          </div>
-          <div class="form-group">
-            <label for="profile-bio">Bio</label>
-            <textarea id="profile-bio" placeholder="Tell us about yourself..." rows="3"></textarea>
-          </div>
-          <button class="btn btn-primary" id="save-profile-btn">Save Profile</button>
         </div>
+        <div class="form-group">
+          <label for="profile-avatar-upload">Avatar</label>
+          <input type="file" id="profile-avatar-upload" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label for="profile-bio">Bio</label>
+          <textarea id="profile-bio" placeholder="Tell us about yourself..." rows="3"></textarea>
+        </div>
+        <button class="btn btn-primary" id="save-profile-btn">Save Profile</button>
       </div>
-
-      <!-- My Uploads Tab -->
-      <div class="settings-tab-content" id="uploads-tab">
-        <h4>Your Uploaded Wallpapers</h4>
-        <div id="user-uploads-list" class="uploads-list">
-          <p>Loading your uploads...</p>
-        </div>
-      </div>
-
-      <!-- Favorites Tab -->
-      <div class="settings-tab-content" id="favorites-tab">
-        <h4>Your Favorite Wallpapers</h4>
-        <div id="user-favorites-list" class="uploads-list">
-          <p>Loading your favorites...</p>
-        </div>
-      </div>
-
-      <!-- Preferences Tab -->
-      <div class="settings-tab-content" id="preferences-tab">
-        <div class="preference-item">
-          <label for="dark-mode-toggle">Dark Mode</label>
-          <label class="switch">
-            <input type="checkbox" id="dark-mode-toggle">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="preference-item">
-          <label for="notifications-toggle">Email Notifications</label>
-          <label class="switch">
-            <input type="checkbox" id="notifications-toggle" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="script.js"></script>
