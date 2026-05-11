@@ -605,6 +605,15 @@ async function initializeApp() {
         loadUserFavorites();
       } else if (action === 'profile') {
         showPage('profile-page');
+      } else if (action === 'filter') {
+        // Reset filter
+        searchInput.value = '';
+        const defaultChip = document.querySelector('.chip[data-filter="all"]');
+        if (defaultChip) {
+          setActiveChip(defaultChip);
+        }
+        filterWallpapers(searchInput.value, activeFilter);
+        searchInput.focus();
       }
     });
   });
