@@ -12,11 +12,11 @@ services:
       - key: FRONTEND_URL
         fromService:
           type: web
-          name: walls-frontend
+          name: artistico-frontend
           property: host
 
   - type: web
-    name: walls-frontend
+    name: artistico-frontend
     runtime: static
     staticPublishPath: ./
     envVars:

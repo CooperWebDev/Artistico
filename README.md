@@ -1,4 +1,4 @@
-# Walls - Professional Wallpaper Gallery
+# Artistico - Professional Wallpaper Gallery
 
 A modern, full-featured wallpaper gallery with user authentication, image uploads, and professional UI.
 

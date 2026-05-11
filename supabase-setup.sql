@@ -1,4 +1,4 @@
--- COMPLETE RESET: Supabase Database Setup for Walls
+-- COMPLETE RESET: Supabase Database Setup for Artistico
 -- This script DROPS everything first, then recreates from scratch
 
 -- STEP 1: DROP EVERYTHING (ignore errors if objects don't exist)
@@ -97,7 +97,7 @@ CREATE TABLE wallpapers (
   description TEXT,
   image_url TEXT NOT NULL,
   tags TEXT[] DEFAULT '{}',
-  category TEXT DEFAULT 'fanart',
+  category TEXT DEFAULT 'nature',
   likes_count INTEGER DEFAULT 0,
   downloads_count INTEGER DEFAULT 0,
   is_public BOOLEAN DEFAULT TRUE,
