@@ -365,6 +365,51 @@ img {
   display: block;
 }
 
+.photo-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  color: white;
+  padding: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.photo-card:hover .photo-overlay {
+  opacity: 1;
+}
+
+.photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.like-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.like-btn:hover {
+  color: #ff6b6b;
+}
+
+.like-btn.liked {
+  color: #ff6b6b;
+}
+
+.likes-count {
+  font-size: 0.9rem;
+  color: white;
+}
+
 /* ========================================
    SETTINGS PANEL
 ======================================== */
@@ -1453,11 +1498,35 @@ body.dark-mode .settings-tabs {
   flex-shrink: 0;
 }
 
+.avatar-letter {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
 .profile-username {
   font-weight: 600;
   color: #111827;
   font-size: 1rem;
   margin: 0;
+}
+
+.profile-username-input {
+  font-weight: 600;
+  color: #111827;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-email {

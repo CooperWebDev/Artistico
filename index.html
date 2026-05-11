@@ -250,6 +250,7 @@
       <div class="settings-tabs">
         <button class="settings-tab active" data-tab="profile">Profile</button>
         <button class="settings-tab" data-tab="uploads">My Uploads</button>
+        <button class="settings-tab" data-tab="favorites">Favorites</button>
         <button class="settings-tab" data-tab="preferences">Preferences</button>
       </div>
       
@@ -260,9 +261,13 @@
           <div class="profile-avatar-section">
             <img id="profile-avatar" src="" alt="Profile Avatar" class="profile-avatar">
             <div>
-              <p id="profile-username" class="profile-username"></p>
+              <input type="text" id="profile-username-input" class="profile-username-input" placeholder="Username">
               <p id="profile-email" class="profile-email"></p>
             </div>
+          </div>
+          <div class="form-group">
+            <label for="profile-avatar-upload">Avatar</label>
+            <input type="file" id="profile-avatar-upload" accept="image/*">
           </div>
           <div class="form-group">
             <label for="profile-bio">Bio</label>
@@ -277,6 +282,14 @@
         <h4>Your Uploaded Wallpapers</h4>
         <div id="user-uploads-list" class="uploads-list">
           <p>Loading your uploads...</p>
+        </div>
+      </div>
+
+      <!-- Favorites Tab -->
+      <div class="settings-tab-content" id="favorites-tab">
+        <h4>Your Favorite Wallpapers</h4>
+        <div id="user-favorites-list" class="uploads-list">
+          <p>Loading your favorites...</p>
         </div>
       </div>
 

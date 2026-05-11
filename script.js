@@ -26,10 +26,27 @@ function initializeApp() {
   const loadingState = document.getElementById('loading-wallpapers');
   const emptyState = document.getElementById('no-wallpapers');
 
-  let activeFilter = 'all';
-  let currentEmail = null;
-  let currentFullName = null;
-  let allWallpapers = []; // Store all wallpapers for filtering
+  let userLikes = new Set();
+
+  async function loadUserLikes() {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      userLikes = new Set();
+      return;
+    }
+    const user = JSON.parse(userData);
+    try {
+      const { data, error } = await supabaseClient
+        .from('user_likes')
+        .select('wallpaper_id')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      userLikes = new Set(data.map(like => like.wallpaper_id));
+    } catch (error) {
+      console.error('Error loading likes:', error);
+      userLikes = new Set();
+    }
+  }
 
   // ============ LOAD WALLPAPERS FROM SUPABASE ============
   async function loadWallpapers() {
@@ -75,18 +92,101 @@ function initializeApp() {
     });
   }
 
-  // ============ CREATE WALLPAPER CARD ============
-  function createWallpaperCard(wallpaper) {
+  async function toggleLike(event) {
+    event.stopPropagation();
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      alert('Please log in to like wallpapers');
+      return;
+    }
+    const user = JSON.parse(userData);
+    const wallpaperId = event.currentTarget.dataset.id;
+
+    try {
+      // Check if liked
+      const { data: existingLike, error: selectError } = await supabaseClient
+        .from('user_likes')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('wallpaper_id', wallpaperId)
+        .single();
+
+      let isLiked = !selectError && existingLike;
+
+      if (isLiked) {
+        // Unlike
+        const { error } = await supabaseClient
+          .from('user_likes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('wallpaper_id', wallpaperId);
+        if (error) throw error;
+        userLikes.delete(wallpaperId);
+      } else {
+        // Like
+        const { error } = await supabaseClient
+          .from('user_likes')
+          .insert({ user_id: user.id, wallpaper_id: wallpaperId });
+        if (error) throw error;
+        userLikes.add(wallpaperId);
+      }
+
+      // Update likes_count
+      const increment = isLiked ? -1 : 1;
+      const { error: updateError } = await supabaseClient
+        .from('wallpapers')
+        .update({ likes_count: supabaseClient.raw(`likes_count + ${increment}`) })
+        .eq('id', wallpaperId);
+      if (updateError) throw updateError;
+
+      // Update UI
+      const likesCountEl = event.currentTarget.nextElementSibling;
+      likesCountEl.textContent = parseInt(likesCountEl.textContent) + increment;
+      event.currentTarget.classList.toggle('liked', !isLiked);
+
+    } catch (error) {
+      console.error('Like error:', error);
+      alert('Error updating like');
+    }
+  }
     const card = document.createElement('article');
     card.className = 'photo-card';
     card.dataset.tags = (wallpaper.tags || []).join(' ') + ' ' + (wallpaper.category || 'nature');
+    card.dataset.id = wallpaper.id;
 
     const img = document.createElement('img');
     img.src = wallpaper.image_url;
     img.alt = wallpaper.title;
     img.loading = 'lazy';
 
+    const overlay = document.createElement('div');
+    overlay.className = 'photo-overlay';
+
+    const title = document.createElement('h3');
+    title.textContent = wallpaper.title;
+
+    const actions = document.createElement('div');
+    actions.className = 'photo-actions';
+
+    const likeBtn = document.createElement('button');
+    likeBtn.className = 'like-btn';
+    if (userLikes.has(wallpaper.id)) likeBtn.classList.add('liked');
+    likeBtn.innerHTML = '<i class="fas fa-heart"></i>';
+    likeBtn.dataset.id = wallpaper.id;
+    likeBtn.addEventListener('click', toggleLike);
+
+    const likesCount = document.createElement('span');
+    likesCount.className = 'likes-count';
+    likesCount.textContent = wallpaper.likes_count || 0;
+
+    actions.appendChild(likeBtn);
+    actions.appendChild(likesCount);
+
+    overlay.appendChild(title);
+    overlay.appendChild(actions);
+
     card.appendChild(img);
+    card.appendChild(overlay);
     return card;
   }
 
@@ -123,8 +223,10 @@ function initializeApp() {
     const userData = localStorage.getItem('user');
     if (userData) {
       const user = JSON.parse(userData);
+      await loadUserLikes();
       await displayUserMenu(user);
     } else {
+      userLikes = new Set();
       displayAuthButtons();
     }
   }
@@ -140,15 +242,37 @@ function initializeApp() {
     document.getElementById('login-btn').classList.add('hidden');
     document.getElementById('user-menu').classList.remove('hidden');
     
-    // Use the user data from localStorage
-    document.getElementById('user-name').textContent = user.username || user.email;
-    document.getElementById('user-email').textContent = user.email;
+    // Handle avatar
+    const avatarImg = document.getElementById('user-avatar');
+    const avatarContainer = avatarImg.parentElement;
     if (user.avatar_url) {
-      document.getElementById('user-avatar').src = user.avatar_url;
+      avatarImg.src = user.avatar_url;
+      avatarImg.style.display = 'block';
+      // Remove any letter div
+      const letterDiv = avatarContainer.querySelector('.avatar-letter');
+      if (letterDiv) letterDiv.remove();
+    } else {
+      avatarImg.style.display = 'none';
+      // Create letter avatar
+      let letterDiv = avatarContainer.querySelector('.avatar-letter');
+      if (!letterDiv) {
+        letterDiv = document.createElement('div');
+        letterDiv.className = 'avatar-letter';
+        avatarContainer.appendChild(letterDiv);
+      }
+      const firstLetter = (user.username || user.email || 'U').charAt(0).toUpperCase();
+      letterDiv.textContent = firstLetter;
+      // Random color
+      const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      letterDiv.style.backgroundColor = randomColor;
     }
     
+    document.getElementById('user-name').textContent = user.username || user.email;
+    document.getElementById('user-email').textContent = user.email;
+    
     // Also update settings profile tab
-    document.getElementById('profile-username').textContent = user.username || user.email;
+    document.getElementById('profile-username-input').value = user.username || '';
     document.getElementById('profile-email').textContent = user.email;
     if (user.avatar_url) {
       document.getElementById('profile-avatar').src = user.avatar_url;
@@ -395,15 +519,15 @@ function initializeApp() {
     userMenuOpen = false;
   });
 
-  // My uploads button in user menu
-  document.getElementById('my-uploads-btn')?.addEventListener('click', () => {
+  // Favorites button in user menu
+  document.getElementById('favorites-btn')?.addEventListener('click', () => {
     const settingsPanel = document.getElementById('settings-panel');
     settingsPanel.classList.remove('hidden');
     
-    // Switch to uploads tab
+    // Switch to favorites tab
     document.querySelectorAll('.settings-tab').forEach(tab => {
       tab.classList.remove('active');
-      if (tab.dataset.tab === 'uploads') {
+      if (tab.dataset.tab === 'favorites') {
         tab.classList.add('active');
       }
     });
@@ -411,9 +535,9 @@ function initializeApp() {
     document.querySelectorAll('.settings-tab-content').forEach(content => {
       content.classList.remove('active');
     });
-    document.getElementById('uploads-tab').classList.add('active');
+    document.getElementById('favorites-tab').classList.add('active');
     
-    loadUserUploads();
+    loadUserFavorites();
     document.getElementById('user-menu').classList.add('hidden');
     userMenuOpen = false;
   });
@@ -602,11 +726,57 @@ function initializeApp() {
       // Load content if needed
       if (tabName === 'uploads') {
         loadUserUploads();
+      } else if (tabName === 'favorites') {
+        loadUserFavorites();
       }
     });
   });
 
-  async function loadUserUploads() {
+  async function loadUserFavorites() {
+    const userData = localStorage.getItem('user');
+    if (!userData) return;
+    const user = JSON.parse(userData);
+
+    try {
+      const { data: likes, error } = await supabaseClient
+        .from('user_likes')
+        .select('wallpaper_id')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      if (!likes || likes.length === 0) {
+        document.getElementById('user-favorites-list').innerHTML = '<p>You haven\'t liked any wallpapers yet.</p>';
+        return;
+      }
+
+      const wallpaperIds = likes.map(like => like.wallpaper_id);
+      const { data: wallpapers, error: wpError } = await supabaseClient
+        .from('wallpapers')
+        .select('*')
+        .in('id', wallpaperIds);
+
+      if (wpError) throw wpError;
+
+      document.getElementById('user-favorites-list').innerHTML = wallpapers.map(wallpaper => `
+        <div class="upload-item">
+          <img src="${wallpaper.image_url}" alt="${wallpaper.title}" class="upload-thumbnail">
+          <div class="upload-info">
+            <h5>${wallpaper.title}</h5>
+            <p>${wallpaper.description || 'No description'}</p>
+            <small>Category: ${wallpaper.category} | Likes: ${wallpaper.likes_count || 0}</small>
+          </div>
+          <div class="upload-actions">
+            <button class="btn btn-sm btn-secondary" onclick="copyImageUrl('${wallpaper.image_url}')">Copy URL</button>
+          </div>
+        </div>
+      `).join('');
+
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      document.getElementById('user-favorites-list').innerHTML = '<p>Error loading favorites</p>';
+    }
+  }
     const userData = localStorage.getItem('user');
     if (!userData) return;
     const user = JSON.parse(userData);
@@ -646,7 +816,6 @@ function initializeApp() {
       console.error('Error loading uploads:', error);
       document.getElementById('user-uploads-list').innerHTML = '<p>Error loading uploads</p>';
     }
-  }
 
   window.copyImageUrl = function(url) {
     navigator.clipboard.writeText(url).then(() => {
@@ -679,19 +848,47 @@ function initializeApp() {
     if (!userData) return;
     const user = JSON.parse(userData);
 
+    const username = document.getElementById('profile-username-input').value.trim();
     const bio = document.getElementById('profile-bio').value;
+    const avatarFile = document.getElementById('profile-avatar-upload').files[0];
+
+    let avatarUrl = user.avatar_url;
+
+    if (avatarFile) {
+      // Upload avatar
+      const filePath = `avatars/${user.id}/${Date.now()}-${avatarFile.name}`;
+      const { error: uploadError } = await supabaseClient.storage
+        .from('wallpapers')
+        .upload(filePath, avatarFile);
+
+      if (uploadError) {
+        alert('Avatar upload failed: ' + uploadError.message);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabaseClient.storage
+        .from('wallpapers')
+        .getPublicUrl(filePath);
+
+      avatarUrl = publicUrl;
+    }
 
     try {
       const { error } = await supabaseClient
         .from('user_profiles')
-        .update({ bio })
+        .update({ username, bio, avatar_url: avatarUrl })
         .eq('id', user.id);
 
       if (error) throw error;
 
       // Update localStorage
+      user.username = username;
       user.bio = bio;
+      user.avatar_url = avatarUrl;
       localStorage.setItem('user', JSON.stringify(user));
+
+      // Update display
+      displayUserMenu(user);
 
       alert('Profile updated successfully!');
     } catch (error) {
@@ -731,7 +928,6 @@ function initializeApp() {
   // Initialize
   checkAuthStatus();
   loadWallpapers();
-}
 
 // Start the app when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
