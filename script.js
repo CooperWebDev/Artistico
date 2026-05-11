@@ -591,19 +591,25 @@ async function initializeApp() {
     link.addEventListener('click', function(e) {
       e.preventDefault();
       const action = this.dataset.action;
+      console.log('Sidebar link clicked:', action);
       sidebarLinks.forEach(el => el.classList.remove('active'));
       this.classList.add('active');
 
       if (action === 'home') {
+        console.log('Showing home page');
         showPage('home');
       } else if (action === 'notifications') {
+        console.log('Showing notifications');
         showNotifications();
       } else if (action === 'upload') {
+        console.log('Showing upload page');
         showPage('upload-page');
       } else if (action === 'favorites') {
+        console.log('Showing favorites page');
         showPage('favorites-page');
         loadUserFavorites();
       } else if (action === 'profile') {
+        console.log('Showing profile/my-uploads page');
         showPage('my-uploads-page');
         loadUserUploads();
       }
@@ -1004,9 +1010,111 @@ async function initializeApp() {
     }
   }
 
+  // ============ LOAD USER FAVORITES ============
+  async function loadUserFavorites() {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      document.getElementById('favorites-list').innerHTML = '<p>Please log in to view your favorites.</p>';
+      return;
+    }
+
+    const user = JSON.parse(userData);
+    const favoritesList = document.getElementById('favorites-list');
+    const loading = document.getElementById('favorites-loading');
+    const empty = document.getElementById('favorites-empty');
+
+    try {
+      loading.style.display = 'block';
+      empty.classList.add('hidden');
+
+      // Get user's liked wallpapers
+      const { data: likes, error } = await supabaseClient
+        .from('user_likes')
+        .select('wallpaper_id')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      if (!likes || likes.length === 0) {
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      // Get the actual wallpaper data
+      const wallpaperIds = likes.map(like => like.wallpaper_id);
+      const { data: wallpapers, error: wallpapersError } = await supabaseClient
+        .from('wallpapers')
+        .select('*')
+        .in('id', wallpaperIds)
+        .order('created_at', { ascending: false });
+
+      if (wallpapersError) throw wallpapersError;
+
+      // Clear existing content
+      const existingCards = favoritesList.querySelectorAll('.photo-card');
+      existingCards.forEach(card => card.remove());
+
+      // Display favorites
+      wallpapers.forEach(wallpaper => {
+        const card = createWallpaperCard(wallpaper);
+        favoritesList.appendChild(card);
+      });
+
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      favoritesList.innerHTML = '<p>Error loading favorites. Please try again.</p>';
+    } finally {
+      loading.style.display = 'none';
+    }
+  }
+
+  // ============ LOAD USER UPLOADS ============
+  async function loadUserUploads() {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      document.getElementById('user-uploads-list').innerHTML = '<p>Please log in to view your uploads.</p>';
+      return;
+    }
+
+    const user = JSON.parse(userData);
+    const uploadsList = document.getElementById('user-uploads-list');
+
+    try {
+      uploadsList.innerHTML = '<p>Loading your uploads...</p>';
+
+      const { data: wallpapers, error } = await supabaseClient
+        .from('wallpapers')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Clear loading message
+      uploadsList.innerHTML = '';
+
+      if (!wallpapers || wallpapers.length === 0) {
+        uploadsList.innerHTML = '<p>You haven\'t uploaded any wallpapers yet.</p>';
+        return;
+      }
+
+      // Display uploads
+      wallpapers.forEach(wallpaper => {
+        const card = createWallpaperCard(wallpaper);
+        uploadsList.appendChild(card);
+      });
+
+    } catch (error) {
+      console.error('Error loading uploads:', error);
+      uploadsList.innerHTML = '<p>Error loading uploads. Please try again.</p>';
+    }
+  }
+
   // Make functions global for onclick
   window.removeLike = removeLike;
   window.deleteUpload = deleteUpload;
+  window.loadUserFavorites = loadUserFavorites;
+  window.loadUserUploads = loadUserUploads;
   window.copyImageUrl = (url) => {
     navigator.clipboard.writeText(url).then(() => {
       alert('Image URL copied to clipboard!');
