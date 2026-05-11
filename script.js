@@ -388,8 +388,16 @@ async function initializeApp() {
         .eq('user_id', user.id);
       if (wallpapersError) throw wallpapersError;
 
+      const notificationsList = document.getElementById('notifications-list');
+      const emptyMessage = document.getElementById('notifications-empty-message');
+      const modalTitle = document.getElementById('notifications-modal-title');
+
       if (!wallpapers || wallpapers.length === 0) {
-        alert('You have no uploads yet, so there are no notifications.');
+        modalTitle.textContent = 'Notifications';
+        notificationsList.innerHTML = '';
+        emptyMessage.textContent = 'You have no uploads yet, so there are no notifications.';
+        emptyMessage.classList.remove('hidden');
+        openNotificationsModal();
         return;
       }
 
@@ -401,27 +409,54 @@ async function initializeApp() {
         .neq('user_id', user.id);
       if (likesError) throw likesError;
 
-      const likeCount = likes?.length || 0;
-      if (likeCount === 0) {
-        alert('No new likes on your wallpapers yet.');
-        return;
-      }
-
-      const countByWallpaper = likes.reduce((acc, like) => {
+      const countByWallpaper = likes?.reduce((acc, like) => {
         acc[like.wallpaper_id] = (acc[like.wallpaper_id] || 0) + 1;
         return acc;
-      }, {});
+      }, {}) || {};
 
-      const details = wallpapers
+      const notifications = wallpapers
         .filter(w => countByWallpaper[w.id])
-        .map(w => `${countByWallpaper[w.id]} like(s) on "${w.title}"`)
-        .join('\n');
+        .map(w => ({ title: w.title, count: countByWallpaper[w.id] }))
+        .sort((a, b) => b.count - a.count);
 
-      alert(`You have ${likeCount} new like(s):\n${details}`);
+      modalTitle.textContent = 'Notifications';
+      if (!notifications.length) {
+        notificationsList.innerHTML = '';
+        emptyMessage.textContent = 'No new likes on your wallpapers yet.';
+        emptyMessage.classList.remove('hidden');
+      } else {
+        emptyMessage.classList.add('hidden');
+        notificationsList.innerHTML = notifications.map(note => `
+          <div class="notification-item">
+            <strong>${note.count}</strong> like(s) on <em>${note.title}</em>
+          </div>
+        `).join('');
+      }
+
+      openNotificationsModal();
     } catch (error) {
       console.error('Notification error:', error);
       alert('Unable to load notifications right now.');
     }
+  }
+
+  function openNotificationsModal() {
+    document.getElementById('notifications-modal')?.classList.remove('hidden');
+  }
+
+  function setupNotificationsModalListeners() {
+    const modal = document.getElementById('notifications-modal');
+    const closeBtn = document.getElementById('notifications-close-btn');
+
+    closeBtn?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
   }
 
   function setActiveChip(selectedChip) {
@@ -744,26 +779,10 @@ async function initializeApp() {
     }
   });
 
-  // Settings button in user menu
-  document.getElementById('settings-btn')?.addEventListener('click', () => {
-    showPage('profile-page');
-  });
-
-  // Favorites button in user menu
-  document.getElementById('favorites-btn')?.addEventListener('click', () => {
-    showPage('favorites-page');
-    loadUserFavorites();
-  });
-
   // My Uploads button in user menu
   document.getElementById('my-uploads-btn')?.addEventListener('click', () => {
     showPage('my-uploads-page');
     loadUserUploads();
-  });
-
-  // ============ UPLOAD FUNCTIONALITY ============
-  document.getElementById('upload-wallpaper-btn')?.addEventListener('click', () => {
-    showPage('upload-page');
   });
 
   // ============ UPLOAD FILE HANDLING ============
@@ -1098,6 +1117,7 @@ async function initializeApp() {
   await checkAuthStatus();
   await loadWallpapers();
   setupDetailModalListeners();
+  setupNotificationsModalListeners();
 }
 
 // Start the app when DOM is ready

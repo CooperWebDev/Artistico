@@ -782,9 +782,52 @@ body.dark-mode .settings-panel {
   transition: all 0.2s ease;
 }
 
-.modal-close:hover {
+..modal-close:hover {
   background-color: #f3f4f6;
   color: #374151;
+}
+
+.modal-content.notifications-modal {
+  padding: 2rem;
+  max-width: 520px;
+}
+
+.notifications-header {
+  margin-bottom: 1.5rem;
+}
+
+.notifications-header h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.notifications-header .modal-subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.notifications-list {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.notification-item {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.notifications-empty-message {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.notifications-empty-message.hidden {
+  display: none;
 }
 
 /* ========================================
