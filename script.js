@@ -535,12 +535,19 @@ async function initializeApp() {
     document.getElementById('trigger-email').textContent = user.email;
 
     const profileAvatarImg = document.getElementById('profile-avatar');
-    if (profileAvatarImg) {
+    const profileAvatarLetter = document.getElementById('profile-avatar-letter');
+    if (profileAvatarImg && profileAvatarLetter) {
       if (user.avatar_url) {
         profileAvatarImg.src = user.avatar_url;
         profileAvatarImg.style.display = 'block';
+        profileAvatarLetter.style.display = 'none';
       } else {
-        profileAvatarImg.style.display = 'block';
+        profileAvatarImg.style.display = 'none';
+        profileAvatarLetter.style.display = 'block';
+        const firstLetter = (user.username || user.email || 'U').charAt(0).toUpperCase();
+        profileAvatarLetter.textContent = firstLetter;
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+        profileAvatarLetter.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
       }
     }
 
