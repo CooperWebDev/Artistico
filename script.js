@@ -610,9 +610,11 @@ async function initializeApp() {
       } else if (action === 'favorites') {
         showPage('favorites-page');
         loadUserFavorites();
-      } else if (action === 'profile') {
+      } else if (action === 'my-uploads') {
         showPage('my-uploads-page');
         loadUserUploads();
+      } else if (action === 'profile') {
+        showPage('profile-page');
       }
     });
   });
@@ -1011,9 +1013,97 @@ async function initializeApp() {
     }
   }
 
+  async function loadUserFavorites() {
+    const userData = localStorage.getItem('user');
+    if (!userData) return;
+    const user = JSON.parse(userData);
+
+    try {
+      const { data: likes, error } = await supabaseClient
+        .from('user_likes')
+        .select('wallpaper_id')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      if (!likes || likes.length === 0) {
+        document.getElementById('favorites-list').innerHTML = '<p>You haven\'t liked any wallpapers yet.</p>';
+        return;
+      }
+
+      const wallpaperIds = likes.map(like => like.wallpaper_id);
+      const { data: wallpapers, error: wpError } = await supabaseClient
+        .from('wallpapers')
+        .select('*')
+        .in('id', wallpaperIds);
+
+      if (wpError) throw wpError;
+
+      document.getElementById('favorites-list').innerHTML = wallpapers.map(wallpaper => `
+        <div class="upload-item">
+          <img src="${wallpaper.image_url}" alt="${wallpaper.title}" class="upload-thumbnail">
+          <div class="upload-info">
+            <h5>${wallpaper.title}</h5>
+            <p>${wallpaper.description || 'No description'}</p>
+            <small>Category: ${wallpaper.category} | Likes: ${wallpaper.likes_count || 0}</small>
+          </div>
+          <div class="upload-actions">
+            <button class="btn btn-sm btn-secondary" onclick="copyImageUrl('${wallpaper.image_url}')">Copy URL</button>
+            <button class="btn btn-sm btn-danger" onclick="removeLike('${wallpaper.id}')">Remove</button>
+          </div>
+        </div>
+      `).join('');
+
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      document.getElementById('favorites-list').innerHTML = '<p>Error loading favorites</p>';
+    }
+  }
+
+  async function loadUserUploads() {
+    const userData = localStorage.getItem('user');
+    if (!userData) return;
+    const user = JSON.parse(userData);
+
+    try {
+      const { data: uploads, error } = await supabaseClient
+        .from('wallpapers')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const uploadsList = document.getElementById('user-uploads-list');
+      
+      if (!uploads || uploads.length === 0) {
+        uploadsList.innerHTML = '<p>You haven\'t uploaded any wallpapers yet.</p>';
+        return;
+      }
+
+      uploadsList.innerHTML = uploads.map(upload => `
+        <article class="photo-card" data-id="${upload.id}">
+          <img src="${upload.image_url}" alt="${upload.title}" loading="lazy" onclick="openWallpaperDetail('${upload.id}')" style="cursor: pointer;">
+          <div class="photo-overlay">
+            <h3>${upload.title}</h3>
+            <div class="photo-actions">
+              <button class="btn btn-sm btn-danger" onclick="deleteUpload('${upload.id}')">Delete</button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+
+    } catch (error) {
+      console.error('Error loading uploads:', error);
+      document.getElementById('user-uploads-list').innerHTML = '<p>Error loading uploads</p>';
+    }
+  }
+
   // Make functions global for onclick
   window.removeLike = removeLike;
   window.deleteUpload = deleteUpload;
+  window.loadUserFavorites = loadUserFavorites;
+  window.loadUserUploads = loadUserUploads;
   window.copyImageUrl = (url) => {
     navigator.clipboard.writeText(url).then(() => {
       alert('Image URL copied to clipboard!');
