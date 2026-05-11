@@ -148,15 +148,19 @@ function initializeApp() {
 
       // Update likes_count
       const increment = isLiked ? -1 : 1;
+      const likesCountEl = event.currentTarget.nextElementSibling;
+      const currentCount = parseInt(likesCountEl?.textContent || '0', 10);
+      const newCount = Math.max(0, currentCount + increment);
       const { error: updateError } = await supabaseClient
         .from('wallpapers')
-        .update({ likes_count: supabaseClient.raw(`likes_count + ${increment}`) })
+        .update({ likes_count: newCount })
         .eq('id', wallpaperId);
       if (updateError) throw updateError;
 
       // Update UI
-      const likesCountEl = event.currentTarget.nextElementSibling;
-      likesCountEl.textContent = parseInt(likesCountEl.textContent) + increment;
+      if (likesCountEl) {
+        likesCountEl.textContent = newCount;
+      }
       event.currentTarget.classList.toggle('liked', !isLiked);
 
     } catch (error) {
