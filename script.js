@@ -149,6 +149,9 @@ function initializeApp() {
       alert('Error updating like');
     }
   }
+
+  // ============ CREATE WALLPAPER CARD ============
+  function createWallpaperCard(wallpaper) {
     const card = document.createElement('article');
     card.className = 'photo-card';
     card.dataset.tags = (wallpaper.tags || []).join(' ') + ' ' + (wallpaper.category || 'nature');
@@ -928,6 +931,7 @@ function initializeApp() {
   // Initialize
   checkAuthStatus();
   loadWallpapers();
+}
 
 // Start the app when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
