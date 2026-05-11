@@ -25,7 +25,9 @@ function initializeApp() {
   const galleryGrid = document.getElementById('wallpapers');
   const loadingState = document.getElementById('loading-wallpapers');
   const emptyState = document.getElementById('no-wallpapers');
+  const userTrigger = document.getElementById('user-trigger');
 
+  let allWallpapers = [];
   let userLikes = new Set();
 
   async function loadUserLikes() {
@@ -238,43 +240,67 @@ function initializeApp() {
     document.getElementById('signup-btn').classList.remove('hidden');
     document.getElementById('login-btn').classList.remove('hidden');
     document.getElementById('user-menu').classList.add('hidden');
+    userTrigger?.classList.add('hidden');
+    userMenuOpen = false;
   }
 
   async function displayUserMenu(user) {
     document.getElementById('signup-btn').classList.add('hidden');
     document.getElementById('login-btn').classList.add('hidden');
-    document.getElementById('user-menu').classList.remove('hidden');
+    userTrigger?.classList.remove('hidden');
+    document.getElementById('user-menu').classList.add('hidden');
+    userMenuOpen = false;
     
-    // Handle avatar
+    // Trigger avatar
+    const triggerAvatarImg = document.getElementById('trigger-avatar');
+    const triggerAvatarContainer = triggerAvatarImg.parentElement;
+    if (user.avatar_url) {
+      triggerAvatarImg.src = user.avatar_url;
+      triggerAvatarImg.style.display = 'block';
+      const letterDiv = triggerAvatarContainer.querySelector('.avatar-letter');
+      if (letterDiv) letterDiv.remove();
+    } else {
+      triggerAvatarImg.style.display = 'none';
+      let letterDiv = triggerAvatarContainer.querySelector('.avatar-letter');
+      if (!letterDiv) {
+        letterDiv = document.createElement('div');
+        letterDiv.className = 'avatar-letter';
+        triggerAvatarContainer.insertBefore(letterDiv, triggerAvatarImg.nextSibling);
+      }
+      const firstLetter = (user.username || user.email || 'U').charAt(0).toUpperCase();
+      letterDiv.textContent = firstLetter;
+      const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+      letterDiv.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    document.getElementById('trigger-name').textContent = user.username || user.email;
+    document.getElementById('trigger-email').textContent = user.email;
+
+    // Dropdown content
     const avatarImg = document.getElementById('user-avatar');
     const avatarContainer = avatarImg.parentElement;
     if (user.avatar_url) {
       avatarImg.src = user.avatar_url;
       avatarImg.style.display = 'block';
-      // Remove any letter div
       const letterDiv = avatarContainer.querySelector('.avatar-letter');
       if (letterDiv) letterDiv.remove();
     } else {
       avatarImg.style.display = 'none';
-      // Create letter avatar
       let letterDiv = avatarContainer.querySelector('.avatar-letter');
       if (!letterDiv) {
         letterDiv = document.createElement('div');
         letterDiv.className = 'avatar-letter';
-        avatarContainer.appendChild(letterDiv);
+        avatarContainer.insertBefore(letterDiv, avatarImg.nextSibling);
       }
       const firstLetter = (user.username || user.email || 'U').charAt(0).toUpperCase();
       letterDiv.textContent = firstLetter;
-      // Random color
       const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-      letterDiv.style.backgroundColor = randomColor;
+      letterDiv.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
     }
-    
+
     document.getElementById('user-name').textContent = user.username || user.email;
     document.getElementById('user-email').textContent = user.email;
-    
-    // Also update settings profile tab
+
     document.getElementById('profile-username-input').value = user.username || '';
     document.getElementById('profile-email').textContent = user.email;
     if (user.avatar_url) {
@@ -408,6 +434,7 @@ function initializeApp() {
   document.getElementById('logout-btn').addEventListener('click', async () => {
     localStorage.removeItem('user');
     displayAuthButtons();
+    document.getElementById('user-menu').classList.add('hidden');
   });
 
   // ============ LOGIN FORM ============
@@ -495,8 +522,8 @@ function initializeApp() {
   // ============ USER MENU TOGGLE ============
   let userMenuOpen = false;
   
-  // Toggle user menu when clicking on profile area
-  document.querySelector('.user-profile')?.addEventListener('click', (e) => {
+  // Toggle user menu when clicking on profile trigger
+  userTrigger?.addEventListener('click', (e) => {
     e.stopPropagation();
     const userMenu = document.getElementById('user-menu');
     userMenuOpen = !userMenuOpen;

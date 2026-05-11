@@ -24,6 +24,16 @@
     <div class="navbar-auth">
       <button id="login-btn" class="btn btn-secondary">Login</button>
       <button id="signup-btn" class="btn btn-primary">Sign Up</button>
+      <button id="user-trigger" class="user-trigger hidden" type="button">
+        <div class="user-profile user-profile-trigger">
+          <img id="trigger-avatar" src="" alt="Avatar" class="avatar">
+          <div>
+            <p id="trigger-name"></p>
+            <small id="trigger-email"></small>
+          </div>
+          <i class="fas fa-chevron-down trigger-icon"></i>
+        </div>
+      </button>
       <div id="user-menu" class="user-menu hidden">
         <div class="user-profile">
           <img id="user-avatar" src="" alt="Avatar" class="avatar">
@@ -245,11 +255,11 @@
     </div>
   </div>
 
-  <div id="settings-panel" class="settings-panel hidden">
+  <div id="settings-panel" class="settings-panel modal hidden">
     <div class="settings-content">
       <div class="settings-header">
         <h3>Account Settings</h3>
-        <button id="close-settings" class="close-btn">&times;</button>
+        <button id="close-settings" class="modal-close">&times;</button>
       </div>
       <div class="settings-tabs">
         <button class="settings-tab active" data-tab="profile">Profile</button>
