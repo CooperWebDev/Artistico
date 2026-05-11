@@ -60,6 +60,8 @@ EXCEPTION WHEN OTHERS THEN
 END $$;
 
 -- Drop tables (ignore errors)
+DROP TABLE IF EXISTS comments CASCADE;
+DROP TABLE IF EXISTS user_likes CASCADE;
 DROP TABLE IF EXISTS wallpapers CASCADE;
 DROP TABLE IF EXISTS user_profiles CASCADE;
 

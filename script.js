@@ -1,5 +1,5 @@
 // Wait for Supabase to load, then initialize
-function initializeApp() {
+async function initializeApp() {
   if (typeof window.supabase === 'undefined') {
     // Retry after a short delay
     setTimeout(initializeApp, 100);
@@ -109,68 +109,89 @@ function initializeApp() {
 
   async function toggleLike(event) {
     event.stopPropagation();
+    const wallpaperId = event.currentTarget.dataset.id;
+
+    try {
+      await updateLike(wallpaperId);
+    } catch (error) {
+      console.error('Like error:', error);
+      alert('Error updating like');
+    }
+  }
+
+  async function updateLike(wallpaperId) {
     const userData = localStorage.getItem('user');
     if (!userData) {
       alert('Please log in to like wallpapers');
       return;
     }
     const user = JSON.parse(userData);
-    const wallpaperId = event.currentTarget.dataset.id;
 
-    try {
-      // Check if liked
-      const { data: existingLike, error: selectError } = await supabaseClient
+    const { data: existingLike, error: selectError } = await supabaseClient
+      .from('user_likes')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .eq('wallpaper_id', wallpaperId)
+      .single();
+
+    let isLiked = false;
+    if (selectError && selectError.code !== 'PGRST116') {
+      throw selectError;
+    }
+    isLiked = !selectError && existingLike;
+
+    if (isLiked) {
+      const { error } = await supabaseClient
         .from('user_likes')
-        .select('user_id')
+        .delete()
         .eq('user_id', user.id)
-        .eq('wallpaper_id', wallpaperId)
-        .single();
+        .eq('wallpaper_id', wallpaperId);
+      if (error) throw error;
+      userLikes.delete(wallpaperId);
+    } else {
+      const { error } = await supabaseClient
+        .from('user_likes')
+        .insert({ user_id: user.id, wallpaper_id: wallpaperId });
+      if (error) throw error;
+      userLikes.add(wallpaperId);
+    }
 
-      // Only treat as a real error if it's not a "no rows" error
-      let isLiked = false;
-      if (selectError && selectError.code !== 'PGRST116') {
-        throw selectError;
+    const { data: wallpaper } = await supabaseClient
+      .from('wallpapers')
+      .select('likes_count')
+      .eq('id', wallpaperId)
+      .single();
+
+    const increment = isLiked ? -1 : 1;
+    const newCount = Math.max(0, (wallpaper?.likes_count || 0) + increment);
+    const { error: updateError } = await supabaseClient
+      .from('wallpapers')
+      .update({ likes_count: newCount })
+      .eq('id', wallpaperId);
+    if (updateError) throw updateError;
+
+    syncLikeUI(wallpaperId, !isLiked, newCount);
+  }
+
+  function syncLikeUI(wallpaperId, isLiked, newCount) {
+    const cardButtons = document.querySelectorAll(`button.like-btn[data-id="${wallpaperId}"]`);
+    cardButtons.forEach(btn => {
+      btn.classList.toggle('liked', isLiked);
+      const countEl = btn.nextElementSibling;
+      if (countEl) {
+        countEl.textContent = newCount;
       }
-      isLiked = !selectError && existingLike;
+    });
 
-      if (isLiked) {
-        // Unlike
-        const { error } = await supabaseClient
-          .from('user_likes')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('wallpaper_id', wallpaperId);
-        if (error) throw error;
-        userLikes.delete(wallpaperId);
-      } else {
-        // Like
-        const { error } = await supabaseClient
-          .from('user_likes')
-          .insert({ user_id: user.id, wallpaper_id: wallpaperId });
-        if (error) throw error;
-        userLikes.add(wallpaperId);
-      }
+    const detailLikeBtn = document.getElementById('detail-like-btn');
+    if (detailLikeBtn?.dataset.wallpaperId === wallpaperId) {
+      detailLikeBtn.classList.toggle('liked', isLiked);
+      document.getElementById('detail-likes-count').textContent = newCount;
+    }
 
-      // Update likes_count
-      const increment = isLiked ? -1 : 1;
-      const likesCountEl = event.currentTarget.nextElementSibling;
-      const currentCount = parseInt(likesCountEl?.textContent || '0', 10);
-      const newCount = Math.max(0, currentCount + increment);
-      const { error: updateError } = await supabaseClient
-        .from('wallpapers')
-        .update({ likes_count: newCount })
-        .eq('id', wallpaperId);
-      if (updateError) throw updateError;
-
-      // Update UI
-      if (likesCountEl) {
-        likesCountEl.textContent = newCount;
-      }
-      event.currentTarget.classList.toggle('liked', !isLiked);
-
-    } catch (error) {
-      console.error('Like error:', error);
-      alert('Error updating like');
+    const wallpaper = allWallpapers.find(w => w.id === wallpaperId);
+    if (wallpaper) {
+      wallpaper.likes_count = newCount;
     }
   }
 
@@ -241,9 +262,6 @@ function initializeApp() {
 
       if (creatorError) console.error('Error loading creator:', creatorError);
 
-      // Load comments
-      await loadCommentsForWallpaper(wallpaperId);
-
       // Populate modal
       document.getElementById('detail-image').src = wallpaper.image_url;
       document.getElementById('detail-title').textContent = wallpaper.title;
@@ -252,7 +270,6 @@ function initializeApp() {
       document.getElementById('detail-date').textContent = new Date(wallpaper.created_at).toLocaleDateString();
       document.getElementById('detail-likes-count').textContent = wallpaper.likes_count || 0;
 
-      // Tags
       const tagsContainer = document.getElementById('detail-tags');
       if (wallpaper.tags && wallpaper.tags.length > 0) {
         tagsContainer.innerHTML = wallpaper.tags.map(tag => `<span>${tag}</span>`).join('');
@@ -260,88 +277,22 @@ function initializeApp() {
         tagsContainer.innerHTML = '';
       }
 
-      // Creator info
       if (creator) {
         document.getElementById('creator-avatar').src = creator.avatar_url || 'https://via.placeholder.com/60?text=Avatar';
         document.getElementById('creator-name').textContent = creator.username || creator.email;
         document.getElementById('creator-bio').textContent = creator.bio || 'No bio provided';
       }
 
-      // Like button state
       const likeBtn = document.getElementById('detail-like-btn');
       likeBtn.dataset.wallpaperId = wallpaperId;
-      if (userLikes.has(wallpaperId)) {
-        likeBtn.classList.add('liked');
-      } else {
-        likeBtn.classList.remove('liked');
-      }
+      likeBtn.classList.toggle('liked', userLikes.has(wallpaperId));
 
-      // Store current creator for "View Work" button
       window.currentCreatorId = wallpaper.user_id;
-
-      // Setup modal close
-      const modal = document.getElementById('wallpaper-detail-modal');
-      modal.classList.remove('hidden');
-
-      // Show comment form or login prompt based on auth status
-      const userData = localStorage.getItem('user');
-      const addCommentForm = document.getElementById('add-comment-form');
-      const loginPrompt = document.getElementById('login-prompt-comments');
-      
-      if (userData) {
-        addCommentForm.classList.remove('hidden');
-        loginPrompt.classList.add('hidden');
-      } else {
-        addCommentForm.classList.add('hidden');
-        loginPrompt.classList.remove('hidden');
-      }
+      document.getElementById('wallpaper-detail-modal').classList.remove('hidden');
 
     } catch (error) {
       console.error('Error opening wallpaper detail:', error);
       alert('Error loading wallpaper details');
-    }
-  }
-
-  async function loadCommentsForWallpaper(wallpaperId) {
-    try {
-      const { data: comments, error } = await supabaseClient
-        .from('comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id,
-          user_profiles(username, avatar_url)
-        `)
-        .eq('wallpaper_id', wallpaperId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const commentsList = document.getElementById('comments-list');
-      document.getElementById('comments-count').textContent = comments?.length || 0;
-
-      if (!comments || comments.length === 0) {
-        commentsList.innerHTML = '<p>No comments yet. Be the first to comment!</p>';
-        return;
-      }
-
-      commentsList.innerHTML = comments.map(comment => {
-        const userProfile = Array.isArray(comment.user_profiles) ? comment.user_profiles[0] : comment.user_profiles;
-        return `
-        <div class="comment">
-          <div class="comment-header">
-            <img src="${userProfile?.avatar_url || 'https://via.placeholder.com/32?text=User'}" alt="User" class="comment-avatar">
-            <span class="comment-author">${userProfile?.username || 'Anonymous'}</span>
-            <span class="comment-date">${new Date(comment.created_at).toLocaleDateString()}</span>
-          </div>
-          <p class="comment-content">${comment.content}</p>
-        </div>
-      `;
-      }).join('');
-
-    } catch (error) {
-      console.error('Error loading comments:', error);
     }
   }
 
@@ -350,97 +301,30 @@ function initializeApp() {
     const closeBtn = modal.querySelector('.modal-close');
     const likeBtn = document.getElementById('detail-like-btn');
     const downloadBtn = document.getElementById('detail-download-btn');
-    const addCommentBtn = document.getElementById('comment-input');
-    const submitCommentBtn = document.getElementById('submit-comment-btn');
-    const cancelCommentBtn = document.getElementById('cancel-comment-btn');
     const viewCreatorBtn = document.getElementById('view-creator-work-btn');
-    const commentLoginBtn = document.getElementById('comment-login-btn');
-    const loginPrompt = document.getElementById('login-prompt-comments');
-    const addCommentForm = document.getElementById('add-comment-form');
 
-    // Close modal
     closeBtn.addEventListener('click', () => {
       modal.classList.add('hidden');
-      document.getElementById('comment-input').value = '';
-      addCommentForm.classList.add('hidden');
     });
 
-    // Close on background click
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         modal.classList.add('hidden');
-        document.getElementById('comment-input').value = '';
-        addCommentForm.classList.add('hidden');
       }
     });
 
-    // Like button
     likeBtn.addEventListener('click', async () => {
-      const userData = localStorage.getItem('user');
-      if (!userData) {
-        alert('Please log in to like wallpapers');
-        return;
-      }
-
-      const user = JSON.parse(userData);
       const wallpaperId = likeBtn.dataset.wallpaperId;
+      if (!wallpaperId) return;
 
       try {
-        const { data: existingLike, error: selectError } = await supabaseClient
-          .from('user_likes')
-          .select('user_id')
-          .eq('user_id', user.id)
-          .eq('wallpaper_id', wallpaperId)
-          .single();
-
-        let isLiked = false;
-        if (selectError && selectError.code !== 'PGRST116') {
-          throw selectError;
-        }
-        isLiked = !selectError && existingLike;
-
-        if (isLiked) {
-          const { error } = await supabaseClient
-            .from('user_likes')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('wallpaper_id', wallpaperId);
-          if (error) throw error;
-          userLikes.delete(wallpaperId);
-        } else {
-          const { error } = await supabaseClient
-            .from('user_likes')
-            .insert({ user_id: user.id, wallpaper_id: wallpaperId });
-          if (error) throw error;
-          userLikes.add(wallpaperId);
-        }
-
-        // Update likes count
-        const { data: wallpaper } = await supabaseClient
-          .from('wallpapers')
-          .select('likes_count')
-          .eq('id', wallpaperId)
-          .single();
-
-        const increment = isLiked ? -1 : 1;
-        const newCount = Math.max(0, (wallpaper?.likes_count || 0) + increment);
-
-        const { error: updateError } = await supabaseClient
-          .from('wallpapers')
-          .update({ likes_count: newCount })
-          .eq('id', wallpaperId);
-        if (updateError) throw updateError;
-
-        document.getElementById('detail-likes-count').textContent = newCount;
-        likeBtn.classList.toggle('liked', !isLiked);
-
+        await updateLike(wallpaperId);
       } catch (error) {
         console.error('Like error:', error);
         alert('Error updating like');
       }
     });
 
-    // Download button
     downloadBtn.addEventListener('click', () => {
       const img = document.getElementById('detail-image');
       const link = document.createElement('a');
@@ -451,72 +335,9 @@ function initializeApp() {
       document.body.removeChild(link);
     });
 
-    // Comment form handling
-    addCommentBtn.addEventListener('focus', () => {
-      const userData = localStorage.getItem('user');
-      if (!userData) {
-        addCommentForm.classList.add('hidden');
-        loginPrompt.classList.remove('hidden');
-      } else {
-        addCommentForm.classList.remove('hidden');
-        loginPrompt.classList.add('hidden');
-      }
-    });
-
-    // Submit comment
-    submitCommentBtn.addEventListener('click', async () => {
-      const userData = localStorage.getItem('user');
-      if (!userData) {
-        alert('Please log in to comment');
-        return;
-      }
-
-      const user = JSON.parse(userData);
-      const content = document.getElementById('comment-input').value.trim();
-      const wallpaperId = likeBtn.dataset.wallpaperId;
-
-      if (!content) {
-        alert('Please enter a comment');
-        return;
-      }
-
-      try {
-        const { error } = await supabaseClient
-          .from('comments')
-          .insert({
-            wallpaper_id: wallpaperId,
-            user_id: user.id,
-            content
-          });
-
-        if (error) throw error;
-
-        // Clear form and reload comments
-        document.getElementById('comment-input').value = '';
-        await loadCommentsForWallpaper(wallpaperId);
-
-      } catch (error) {
-        console.error('Error posting comment:', error);
-        alert('Error posting comment: ' + error.message);
-      }
-    });
-
-    // Cancel comment
-    cancelCommentBtn.addEventListener('click', () => {
-      document.getElementById('comment-input').value = '';
-      addCommentForm.classList.add('hidden');
-    });
-
-    // View creator's work
     viewCreatorBtn.addEventListener('click', () => {
       modal.classList.add('hidden');
       filterWallpapersByCreator(window.currentCreatorId);
-    });
-
-    // Comment login button
-    commentLoginBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
-      document.getElementById('login-btn').click();
     });
   }
 
@@ -550,6 +371,57 @@ function initializeApp() {
     });
 
     displayWallpapers(filteredWallpapers);
+  }
+
+  async function showNotifications() {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      alert('Please log in to see notifications.');
+      return;
+    }
+
+    const user = JSON.parse(userData);
+    try {
+      const { data: wallpapers, error: wallpapersError } = await supabaseClient
+        .from('wallpapers')
+        .select('id,title')
+        .eq('user_id', user.id);
+      if (wallpapersError) throw wallpapersError;
+
+      if (!wallpapers || wallpapers.length === 0) {
+        alert('You have no uploads yet, so there are no notifications.');
+        return;
+      }
+
+      const wallpaperIds = wallpapers.map(w => w.id);
+      const { data: likes, error: likesError } = await supabaseClient
+        .from('user_likes')
+        .select('wallpaper_id')
+        .in('wallpaper_id', wallpaperIds)
+        .neq('user_id', user.id);
+      if (likesError) throw likesError;
+
+      const likeCount = likes?.length || 0;
+      if (likeCount === 0) {
+        alert('No new likes on your wallpapers yet.');
+        return;
+      }
+
+      const countByWallpaper = likes.reduce((acc, like) => {
+        acc[like.wallpaper_id] = (acc[like.wallpaper_id] || 0) + 1;
+        return acc;
+      }, {});
+
+      const details = wallpapers
+        .filter(w => countByWallpaper[w.id])
+        .map(w => `${countByWallpaper[w.id]} like(s) on "${w.title}"`)
+        .join('\n');
+
+      alert(`You have ${likeCount} new like(s):\n${details}`);
+    } catch (error) {
+      console.error('Notification error:', error);
+      alert('Unable to load notifications right now.');
+    }
   }
 
   function setActiveChip(selectedChip) {
@@ -660,14 +532,23 @@ function initializeApp() {
     });
   }
 
-  sidebarLinks.forEach((link, index) => {
+  sidebarLinks.forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
+      const action = this.dataset.action;
       sidebarLinks.forEach(el => el.classList.remove('active'));
       this.classList.add('active');
 
-      // If it's the settings cog (last one, index 4)
-      if (index === 4) {
+      if (action === 'home') {
+        showPage('home');
+      } else if (action === 'notifications') {
+        showNotifications();
+      } else if (action === 'upload') {
+        showPage('upload-page');
+      } else if (action === 'favorites') {
+        showPage('favorites-page');
+        loadUserFavorites();
+      } else if (action === 'profile') {
         showPage('profile-page');
       }
     });
@@ -1210,8 +1091,8 @@ function initializeApp() {
   });
 
   // Initialize
-  checkAuthStatus();
-  loadWallpapers();
+  await checkAuthStatus();
+  await loadWallpapers();
   setupDetailModalListeners();
 }
 
