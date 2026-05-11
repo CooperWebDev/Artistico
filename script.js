@@ -267,18 +267,8 @@ function initializeApp() {
 
       if (error) throw error;
 
-      // Create or update user profile
-      const { error: profileError } = await supabaseClient
-        .from('user_profiles')
-        .upsert([
-          {
-            id: data.user.id,
-            username,
-            email,
-          }
-        ], { onConflict: 'id' });
-
-      if (profileError) throw profileError;
+      // Profile is automatically created by Supabase auth trigger
+      // No need to upsert here
 
       document.getElementById('signup-modal').classList.add('hidden');
       errorDiv.style.display = 'none';
