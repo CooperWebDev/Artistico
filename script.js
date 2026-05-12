@@ -365,7 +365,22 @@ async function initializeApp() {
       }
 
       if (creator) {
-        document.getElementById('creator-avatar').src = creator.avatar_url || 'https://via.placeholder.com/60?text=Avatar';
+        const creatorAvatarImg = document.getElementById('creator-avatar');
+        const creatorAvatarLetter = document.getElementById('creator-avatar-letter');
+        if (creator.avatar_url) {
+          creatorAvatarImg.src = creator.avatar_url;
+          creatorAvatarImg.style.display = 'block';
+          if (creatorAvatarLetter) creatorAvatarLetter.classList.add('hidden');
+        } else {
+          creatorAvatarImg.style.display = 'none';
+          if (creatorAvatarLetter) {
+            creatorAvatarLetter.classList.remove('hidden');
+            const firstLetter = (creator.username || creator.email || 'U').charAt(0).toUpperCase();
+            creatorAvatarLetter.textContent = firstLetter;
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+            creatorAvatarLetter.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          }
+        }
         document.getElementById('creator-name').textContent = creator.username || creator.email;
         document.getElementById('creator-bio').textContent = creator.bio || 'No bio provided';
       }
