@@ -6,16 +6,18 @@ async function initializeApp() {
     return;
   }
 
-  // Supabase setup - Replace with your actual keys
-  const supabaseUrl = 'https://gaaatmmreteqdpsxsvyw.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhYWF0bW1yZXRlcWRwc3hzdnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MzM4MDgsImV4cCI6MjA5NDAwOTgwOH0.Y6-R5x6xmBSAW7hcpKc9uHcfNQ739ajnxghmbug45t8';
+  // Load Supabase config from server env
+  const configResponse = await fetch('/api/config');
+  if (!configResponse.ok) {
+    throw new Error('Unable to load Supabase config');
+  }
+  const config = await configResponse.json();
+  const supabaseUrl = config.supabaseUrl;
+  const supabaseKey = config.supabaseKey;
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase configuration is missing');
+  }
   const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-  // Backend URL - change this when deploying
-  // Backend URL configuration
-  const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:3000'
-    : 'https://artistico-coyl.onrender.com';
 
   const searchInput = document.getElementById('search-input');
   const searchBtn = document.getElementById('search-btn');
