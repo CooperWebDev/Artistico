@@ -1581,6 +1581,25 @@ body.dark-mode .settings-tabs {
   margin: 0;
 }
 
+.creator-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.creator-profile-card .profile-avatar-container {
+  width: 120px;
+  height: 120px;
+}
+
+.creator-profile-card .profile-avatar-container .avatar-letter {
+  font-size: 2.5rem;
+}
+
 .profile-avatar-section {
   display: flex;
   align-items: center;
@@ -1590,26 +1609,39 @@ body.dark-mode .settings-tabs {
   border-radius: 8px;
 }
 
-.profile-avatar {
+.profile-avatar-container {
+  position: relative;
   width: 60px;
   height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  background-color: #e5e7eb;
   flex-shrink: 0;
 }
 
-.avatar-letter {
-  width: 40px;
-  height: 40px;
+.profile-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #e5e7eb;
+}
+
+.profile-avatar-container .avatar-letter {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 1.2rem;
-  flex-shrink: 0;
+  font-size: 1.5rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.profile-avatar-container .avatar-letter {
+  width: 60px;
+  height: 60px;
 }
 
 .profile-username {

@@ -440,10 +440,23 @@ async function initializeApp() {
       if (creatorError) throw creatorError;
       if (wallpapersError) throw wallpapersError;
 
-      document.getElementById('creator-view-avatar').src = creator.avatar_url || 'https://via.placeholder.com/120?text=Avatar';
       document.getElementById('creator-view-name').textContent = creator.username || creator.email;
-      document.getElementById('creator-view-email').textContent = creator.email;
       document.getElementById('creator-view-bio').textContent = creator.bio || 'No bio provided.';
+
+      const creatorAvatarImg = document.getElementById('creator-view-avatar');
+      const creatorLetterDiv = document.getElementById('creator-view-letter');
+      if (creator.avatar_url) {
+        creatorAvatarImg.src = creator.avatar_url;
+        creatorAvatarImg.style.display = 'block';
+        creatorLetterDiv.classList.add('hidden');
+      } else {
+        creatorAvatarImg.style.display = 'none';
+        creatorLetterDiv.classList.remove('hidden');
+        const firstLetter = (creator.username || creator.email || 'U').charAt(0).toUpperCase();
+        creatorLetterDiv.textContent = firstLetter;
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+        creatorLetterDiv.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      }
 
       const creatorWorkList = document.getElementById('creator-work-list');
       if (!wallpapers || wallpapers.length === 0) {
@@ -621,12 +634,19 @@ async function initializeApp() {
     document.getElementById('trigger-email').textContent = user.email;
 
     const profileAvatarImg = document.getElementById('profile-avatar');
+    const profileLetterDiv = document.getElementById('profile-letter');
     if (profileAvatarImg) {
       if (user.avatar_url) {
         profileAvatarImg.src = user.avatar_url;
         profileAvatarImg.style.display = 'block';
+        profileLetterDiv.classList.add('hidden');
       } else {
-        profileAvatarImg.style.display = 'block';
+        profileAvatarImg.style.display = 'none';
+        profileLetterDiv.classList.remove('hidden');
+        const firstLetter = (user.username || user.email || 'U').charAt(0).toUpperCase();
+        profileLetterDiv.textContent = firstLetter;
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+        profileLetterDiv.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
       }
     }
 
