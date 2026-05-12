@@ -95,7 +95,7 @@
         <form id="signup-form">
           <div class="form-group">
             <label for="signup-name">Username</label>
-            <input type="text" id="signup-name" required placeholder="user123">
+            <input type="text" id="signup-name" required placeholder="user123" maxlength="20">
           </div>
           <div class="form-group">
             <label for="signup-email">Email</label>
@@ -171,11 +171,11 @@
         <form id="upload-form">
           <div class="form-group">
             <label for="upload-title">Title <span class="required">*</span></label>
-            <input type="text" id="upload-title" required placeholder="e.g., Sunset Landscape">
+            <input type="text" id="upload-title" required placeholder="e.g., Sunset Landscape" maxlength="50">
           </div>
           <div class="form-group">
             <label for="upload-description">Description</label>
-            <textarea id="upload-description" rows="3" placeholder="Describe your wallpaper..."></textarea>
+            <textarea id="upload-description" rows="3" placeholder="Describe your wallpaper..." maxlength="200"></textarea>
           </div>
           <div class="form-group">
             <label for="upload-category">Category</label>
@@ -302,7 +302,7 @@
               <div id="profile-letter" class="avatar-letter hidden"></div>
             </div>
             <div>
-              <input type="text" id="profile-username-input" class="profile-username-input" placeholder="Username">
+              <input type="text" id="profile-username-input" class="profile-username-input" placeholder="Username" maxlength="20">
               <p id="profile-email" class="profile-email"></p>
             </div>
           </div>
@@ -312,7 +312,7 @@
           </div>
           <div class="form-group">
             <label for="profile-bio">Bio</label>
-            <textarea id="profile-bio" placeholder="Tell us about yourself..." rows="3"></textarea>
+            <textarea id="profile-bio" placeholder="Tell us about yourself..." rows="3" maxlength="150"></textarea>
           </div>
           <button class="btn btn-primary" id="save-profile-btn">Save Profile</button>
         </div>

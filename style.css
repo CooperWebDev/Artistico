@@ -396,6 +396,18 @@ img {
   transition: opacity 0.3s;
 }
 
+.photo-overlay h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .photo-card:hover .photo-overlay {
   opacity: 1;
 }
@@ -972,6 +984,22 @@ form {
   cursor: pointer;
 }
 
+.char-counter {
+  display: block;
+  text-align: right;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.char-counter.warning {
+  color: #f59e0b;
+}
+
+.char-counter.error {
+  color: #ef4444;
+}
+
 .form-checkbox {
   display: flex;
   align-items: center;
@@ -1301,6 +1329,18 @@ body.dark-mode .form-group textarea:focus,
 body.dark-mode .form-group select:focus {
   border-color: #60a5fa;
   box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+body.dark-mode .char-counter {
+  color: #9ca3af;
+}
+
+body.dark-mode .char-counter.warning {
+  color: #fbbf24;
+}
+
+body.dark-mode .char-counter.error {
+  color: #f87171;
 }
 
 body.dark-mode .file-upload-area {
@@ -1642,6 +1682,18 @@ body.dark-mode .settings-tabs {
   font-size: 2.5rem;
 }
 
+#creator-view-bio {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0.5rem 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .profile-avatar-section {
   display: flex;
   align-items: center;
@@ -1976,6 +2028,11 @@ body.dark-mode .preference-item label {
   color: #6b7280;
   margin: 0.25rem 0;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .view-creator-work-btn {
@@ -1999,6 +2056,11 @@ body.dark-mode .preference-item label {
   color: #6b7280;
   line-height: 1.6;
   margin: 0 0 1rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .wallpaper-meta {

@@ -1273,7 +1273,55 @@ async function initializeApp() {
   setupDetailModalListeners();
 }
 
+// ============ CHARACTER COUNTERS ============
+function initializeCharacterCounters() {
+  const fields = [
+    { id: 'signup-name', maxLength: 20 },
+    { id: 'profile-username-input', maxLength: 20 },
+    { id: 'upload-title', maxLength: 50 },
+    { id: 'upload-description', maxLength: 200 },
+    { id: 'profile-bio', maxLength: 150 }
+  ];
+
+  fields.forEach(field => {
+    const element = document.getElementById(field.id);
+    if (element) {
+      // Create counter element
+      const counter = document.createElement('span');
+      counter.className = 'char-counter';
+      counter.id = `${field.id}-counter`;
+      
+      // Insert counter after the form group
+      const formGroup = element.closest('.form-group');
+      if (formGroup) {
+        formGroup.appendChild(counter);
+      }
+
+      // Update counter function
+      const updateCounter = () => {
+        const remaining = field.maxLength - element.value.length;
+        counter.textContent = `${remaining} characters remaining`;
+        
+        // Change color based on remaining characters
+        counter.classList.remove('warning', 'error');
+        if (remaining < 10) {
+          counter.classList.add('error');
+        } else if (remaining < 20) {
+          counter.classList.add('warning');
+        }
+      };
+
+      // Initial update
+      updateCounter();
+
+      // Add event listener
+      element.addEventListener('input', updateCounter);
+    }
+  });
+}
+
 // Start the app when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
   initializeApp();
+  initializeCharacterCounters();
 });
