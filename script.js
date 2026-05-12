@@ -34,19 +34,64 @@ async function initializeApp() {
   let allWallpapers = [];
   let userLikes = new Set();
   let userMenuOpen = false;
+  let activePage = 'home';
 
   function updateNavbarTitle(pageId) {
     const titles = {
-      'home': { label: 'Wallpapers', title: 'Curated wallpapers for your device' },
-      'upload-page': { label: 'Upload', title: 'Share your artwork with the community' },
-      'favorites-page': { label: 'Favorites', title: 'Your favorite wallpapers' },
-      'my-uploads-page': { label: 'My Uploads', title: 'Your uploaded wallpapers' },
-      'profile-page': { label: 'Profile', title: 'Manage your account' },
-      'notifications-page': { label: 'Inbox', title: 'Your notification feed' },
+      'home': 'Curated wallpapers for your device',
+      'upload-page': 'Share your artwork with the community',
+      'favorites-page': 'Your favorite wallpapers',
+      'my-uploads-page': 'Your uploaded wallpapers',
+      'profile-page': 'Manage your account',
+      'notifications-page': 'Your notification feed',
     };
-    const pageData = titles[pageId] || titles.home;
-    navbarPageLabel && (navbarPageLabel.textContent = pageData.label);
-    navbarPageTitle && (navbarPageTitle.textContent = pageData.title);
+    navbarPageLabel && (navbarPageLabel.textContent = '© 2026 All Rights Reserved by Artistico');
+    navbarPageTitle && (navbarPageTitle.textContent = titles[pageId] || titles.home);
+  }
+
+  function renderLoginRequired(pageId) {
+    if (pageId === 'upload-page') {
+      document.getElementById('upload-form').classList.add('hidden');
+      document.getElementById('upload-login-message').classList.remove('hidden');
+    }
+
+    if (pageId === 'favorites-page') {
+      document.getElementById('favorites-list').innerHTML = '<div class="empty-state"><p>You need to login to view this</p></div>';
+    }
+
+    if (pageId === 'my-uploads-page') {
+      document.getElementById('user-uploads-list').innerHTML = '<div class="empty-state"><p>You need to login to view this</p></div>';
+    }
+  }
+
+  function clearLoginRequired(pageId) {
+    if (pageId === 'upload-page') {
+      document.getElementById('upload-form').classList.remove('hidden');
+      document.getElementById('upload-login-message').classList.add('hidden');
+    }
+
+    if (pageId === 'favorites-page') {
+      document.getElementById('favorites-list').innerHTML = '<div id="favorites-loading" class="loading-state"><p>Loading favorites...</p></div><div id="favorites-empty" class="empty-state hidden"><p>You haven\'t liked any wallpapers yet.</p></div>';
+    }
+
+    if (pageId === 'my-uploads-page') {
+      document.getElementById('user-uploads-list').innerHTML = '<p>Loading your uploads...</p>';
+    }
+  }
+
+  function handlePageAuth(pageId) {
+    const userData = localStorage.getItem('user');
+    const requiresAuth = ['upload-page', 'favorites-page', 'my-uploads-page'];
+    if (requiresAuth.includes(pageId) && !userData) {
+      renderLoginRequired(pageId);
+      return false;
+    }
+
+    if (pageId === 'upload-page') {
+      clearLoginRequired(pageId);
+    }
+
+    return true;
   }
 
   function showPage(pageId) {
@@ -57,7 +102,15 @@ async function initializeApp() {
     });
     document.getElementById('user-menu')?.classList.add('hidden');
     userMenuOpen = false;
+    activePage = pageId;
     updateNavbarTitle(pageId);
+    if (!handlePageAuth(pageId)) return;
+
+    if (pageId === 'favorites-page') {
+      loadUserFavorites();
+    } else if (pageId === 'my-uploads-page') {
+      loadUserUploads();
+    }
   }
 
   async function loadUserLikes() {
@@ -532,6 +585,10 @@ async function initializeApp() {
     if (profileEmail) profileEmail.textContent = user.email;
     const profileBio = document.getElementById('profile-bio');
     if (profileBio) profileBio.value = user.bio || '';
+
+    if (['upload-page', 'favorites-page', 'my-uploads-page'].includes(activePage)) {
+      showPage(activePage);
+    }
   }
 
   chips.forEach(chip => {
@@ -584,10 +641,8 @@ async function initializeApp() {
         showPage('upload-page');
       } else if (action === 'favorites') {
         showPage('favorites-page');
-        loadUserFavorites();
       } else if (action === 'profile') {
         showPage('my-uploads-page');
-        loadUserUploads();
       }
     });
   });
@@ -937,7 +992,11 @@ async function initializeApp() {
 
   async function loadUserFavorites() {
     const userData = localStorage.getItem('user');
-    if (!userData) return;
+    const favoritesList = document.getElementById('favorites-list');
+    if (!userData) {
+      favoritesList.innerHTML = '<div class="empty-state"><p>You need to login to view this</p></div>';
+      return;
+    }
     const user = JSON.parse(userData);
 
     try {
@@ -983,7 +1042,11 @@ async function initializeApp() {
 
   async function loadUserUploads() {
     const userData = localStorage.getItem('user');
-    if (!userData) return;
+    const uploadsList = document.getElementById('user-uploads-list');
+    if (!userData) {
+      uploadsList.innerHTML = '<div class="empty-state"><p>You need to login to view this</p></div>';
+      return;
+    }
     const user = JSON.parse(userData);
 
     try {
