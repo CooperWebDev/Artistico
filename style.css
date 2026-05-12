@@ -660,7 +660,19 @@ body.dark-mode .settings-panel {
   .navbar {
     flex-wrap: wrap;
     padding: 1rem;
-    margin: 0.5rem 1rem;
+    margin: 0.5rem 0.75rem;
+    border-radius: 24px;
+  }
+
+  .navbar-left {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .logo {
+    padding: 0.5rem 0.85rem;
   }
 
   .search-container {
@@ -669,13 +681,127 @@ body.dark-mode .settings-panel {
 
   .search-container input[type="search"] {
     width: 100%;
+    padding-right: 3rem;
+    font-size: 0.95rem;
   }
 
-  .navbar-links {
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+  .search-container button {
+    right: 0.9rem;
+  }
+
+  .navbar-page {
     width: 100%;
+    text-align: left;
+  }
+
+  .navbar-page-label,
+  .navbar-page-title {
+    text-align: left;
+  }
+
+  .navbar-page-title {
+    font-size: 0.95rem;
+  }
+
+  .navbar-auth {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .navbar-auth button {
+    flex: 1 1 48%;
+    min-width: 0;
+  }
+
+  .sidebar {
+    padding: 0.5rem;
+  }
+
+  .sidebar-brand {
+    width: 48px;
+    height: 48px;
+  }
+
+  .sidebar-nav {
+    gap: 0.5rem;
+  }
+
+  .sidebar-link {
+    width: 48px;
+    height: 48px;
+  }
+
+  .page-grid {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .gallery-grid {
+    column-width: 100%;
+    column-gap: 0.75rem;
+  }
+
+  .photo-overlay {
+    padding: 0.85rem;
+  }
+
+  .photo-overlay h3 {
+    font-size: 0.95rem;
+  }
+
+  .top-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 420px) {
+  .navbar-auth button {
+    flex: 1 1 100%;
+  }
+
+  .logo {
+    font-size: 1.1rem;
+  }
+
+  .search-container button {
+    right: 0.7rem;
+  }
+
+  .navbar-page-title {
+    font-size: 0.9rem;
+  }
+
+  .photo-card {
+    margin-bottom: 0.85rem;
+  }
+
+  .sidebar-link {
+    width: 44px;
+    height: 44px;
+  }
+
+  .sidebar-brand {
+    width: 44px;
+    height: 44px;
+  }
+
+  .profile-avatar-section,
+  .creator-profile-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .upload-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .upload-thumbnail {
+    width: 100%;
+    height: auto;
   }
 }
 
