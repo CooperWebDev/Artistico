@@ -4,6 +4,12 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -162,7 +168,9 @@ img {
   gap: 1.5rem;
   padding: 1.5rem 2rem 2rem;
   align-items: start;
-  min-height: calc(100vh - 7rem);
+  min-height: calc(100vh - 8rem);
+  height: calc(100vh - 8rem);
+  overflow: hidden;
 }
 
 .sidebar {
@@ -217,6 +225,13 @@ img {
   gap: 1.5rem;
   max-height: calc(100vh - 8rem);
   overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.content-panel::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .top-bar {
