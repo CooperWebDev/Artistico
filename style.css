@@ -1342,7 +1342,7 @@ body.dark-mode .user-menu .menu-item.text-danger:hover {
 .empty-state {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 1rem;
   color: #6b7280;
 }
 
