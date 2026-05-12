@@ -76,12 +76,6 @@
         </div>
       </section>
 
-      <section id="about" class="about-panel">
-        <div class="about-box">
-          <h2>About Wallpapers</h2>
-          <p>This site features a curated collection of wallpapers. Browse stunning images from nature, abstract art, cityscapes, and more to find the perfect background for your screen.</p>
-        </div>
-      </section>
     </section>
   </main>
 
@@ -369,18 +363,33 @@
     </div>
   </div>
 
-  <!-- Notifications Modal -->
-  <div id="notifications-modal" class="modal hidden">
-    <div class="modal-content notifications-modal">
-      <button id="notifications-close-btn" class="modal-close">&times;</button>
-      <div class="notifications-header">
-        <h2 id="notifications-modal-title">Notifications</h2>
-        <p class="modal-subtitle">Recent updates for your uploaded wallpapers.</p>
+  <main id="notifications-page" class="page-grid hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fas fa-thumbtack"></i>
       </div>
-      <div id="notifications-list" class="notifications-list"></div>
-      <p id="notifications-empty-message" class="notifications-empty-message hidden"></p>
-    </div>
-  </div>
+      <nav class="sidebar-nav">
+        <a href="#home" class="sidebar-link active" data-action="home"><i class="fas fa-home"></i></a>
+        <a href="#" class="sidebar-link" data-action="notifications"><i class="fas fa-inbox"></i></a>
+        <a href="#" class="sidebar-link" data-action="upload"><i class="fas fa-plus-square"></i></a>
+        <a href="#" class="sidebar-link" data-action="favorites"><i class="fas fa-heart"></i></a>
+        <a href="#" class="sidebar-link" data-action="profile"><i class="fas fa-cog"></i></a>
+      </nav>
+    </aside>
+    <section class="content-panel">
+      <div class="top-bar">
+        <div></div>
+      </div>
+      <div class="notifications-container">
+        <div class="notifications-header">
+          <h2>Notifications</h2>
+          <p class="modal-subtitle">Recent updates for your uploaded wallpapers.</p>
+        </div>
+        <div id="notifications-list" class="notifications-list"></div>
+        <p id="notifications-empty-message" class="notifications-empty-message hidden"></p>
+      </div>
+    </section>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="script.js"></script>

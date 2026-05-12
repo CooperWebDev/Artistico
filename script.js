@@ -29,7 +29,7 @@ async function initializeApp() {
   const emptyState = document.getElementById('no-wallpapers');
   const userTrigger = document.getElementById('user-trigger');
 
-  const pages = ['home', 'upload-page', 'favorites-page', 'my-uploads-page', 'profile-page'];
+  const pages = ['home', 'upload-page', 'favorites-page', 'my-uploads-page', 'profile-page', 'notifications-page'];
 
   let allWallpapers = [];
   let userLikes = new Set();
@@ -42,6 +42,7 @@ async function initializeApp() {
       'favorites-page': { label: 'Favorites', title: 'Your favorite wallpapers' },
       'my-uploads-page': { label: 'My Uploads', title: 'Your uploaded wallpapers' },
       'profile-page': { label: 'Profile', title: 'Manage your account' },
+      'notifications-page': { label: 'Inbox', title: 'Your notification feed' },
     };
     const pageData = titles[pageId] || titles.home;
     navbarPageLabel && (navbarPageLabel.textContent = pageData.label);
@@ -390,9 +391,18 @@ async function initializeApp() {
   }
 
   async function showNotifications() {
+    showPage('notifications-page');
+
+    const notificationsList = document.getElementById('notifications-list');
+    const emptyMessage = document.getElementById('notifications-empty-message');
+
+    notificationsList.innerHTML = '';
+    emptyMessage.classList.add('hidden');
+
     const userData = localStorage.getItem('user');
     if (!userData) {
-      alert('Please log in to see notifications.');
+      emptyMessage.textContent = 'You need to login to view this';
+      emptyMessage.classList.remove('hidden');
       return;
     }
 
@@ -404,16 +414,9 @@ async function initializeApp() {
         .eq('user_id', user.id);
       if (wallpapersError) throw wallpapersError;
 
-      const notificationsList = document.getElementById('notifications-list');
-      const emptyMessage = document.getElementById('notifications-empty-message');
-      const modalTitle = document.getElementById('notifications-modal-title');
-
       if (!wallpapers || wallpapers.length === 0) {
-        modalTitle.textContent = 'Notifications';
-        notificationsList.innerHTML = '';
         emptyMessage.textContent = 'You have no uploads yet, so there are no notifications.';
         emptyMessage.classList.remove('hidden');
-        openNotificationsModal();
         return;
       }
 
@@ -431,49 +434,28 @@ async function initializeApp() {
       }, {}) || {};
 
       const notifications = wallpapers
-        .filter(w => countByWallpaper[w.id])
-        .map(w => ({ title: w.title, count: countByWallpaper[w.id] }))
+        .map(w => ({ title: w.title, count: countByWallpaper[w.id] || 0 }))
+        .filter(note => note.count > 0)
         .sort((a, b) => b.count - a.count);
 
-      modalTitle.textContent = 'Notifications';
       if (!notifications.length) {
-        notificationsList.innerHTML = '';
         emptyMessage.textContent = 'No new likes on your wallpapers yet.';
         emptyMessage.classList.remove('hidden');
-      } else {
-        emptyMessage.classList.add('hidden');
-        notificationsList.innerHTML = notifications.map(note => `
-          <div class="notification-item">
-            <strong>${note.count}</strong> like(s) on <em>${note.title}</em>
-          </div>
-        `).join('');
+        return;
       }
 
-      openNotificationsModal();
+      notificationsList.innerHTML = notifications.map(note => `
+        <div class="notification-item">
+          <strong>${note.count}</strong> like(s) on <em>${note.title}</em>
+        </div>
+      `).join('');
     } catch (error) {
       console.error('Notification error:', error);
-      alert('Unable to load notifications right now.');
+      emptyMessage.textContent = 'Unable to load notifications right now.';
+      emptyMessage.classList.remove('hidden');
     }
   }
 
-  function openNotificationsModal() {
-    document.getElementById('notifications-modal')?.classList.remove('hidden');
-  }
-
-  function setupNotificationsModalListeners() {
-    const modal = document.getElementById('notifications-modal');
-    const closeBtn = document.getElementById('notifications-close-btn');
-
-    closeBtn?.addEventListener('click', () => {
-      modal.classList.add('hidden');
-    });
-
-    modal?.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.classList.add('hidden');
-      }
-    });
-  }
 
   function setActiveChip(selectedChip) {
     chips.forEach(chip => chip.classList.remove('active'));
@@ -1134,7 +1116,6 @@ async function initializeApp() {
   await loadWallpapers();
   updateNavbarTitle('home');
   setupDetailModalListeners();
-  setupNotificationsModalListeners();
 }
 
 // Start the app when DOM is ready
