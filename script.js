@@ -610,28 +610,29 @@ async function initializeApp() {
     userMenuOpen = false;
     
     const triggerAvatarImg = document.getElementById('trigger-avatar');
-    const triggerAvatarContainer = triggerAvatarImg.parentElement;
+    const triggerLetterDiv = document.getElementById('trigger-letter');
     if (user.avatar_url) {
       triggerAvatarImg.src = user.avatar_url;
       triggerAvatarImg.style.display = 'block';
-      const letterDiv = triggerAvatarContainer.querySelector('.avatar-letter');
-      if (letterDiv) letterDiv.remove();
+      if (triggerLetterDiv) triggerLetterDiv.classList.add('hidden');
     } else {
       triggerAvatarImg.style.display = 'none';
-      let letterDiv = triggerAvatarContainer.querySelector('.avatar-letter');
-      if (!letterDiv) {
-        letterDiv = document.createElement('div');
-        letterDiv.className = 'avatar-letter';
-        triggerAvatarContainer.insertBefore(letterDiv, triggerAvatarImg.nextSibling);
+      if (triggerLetterDiv) {
+        triggerLetterDiv.classList.remove('hidden');
+        const firstLetter = (user.username || user.email || 'U').charAt(0).toUpperCase();
+        triggerLetterDiv.textContent = firstLetter;
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+        triggerLetterDiv.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
       }
-      const firstLetter = (user.username || user.email || 'U').charAt(0).toUpperCase();
-      letterDiv.textContent = firstLetter;
-      const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
-      letterDiv.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
     }
 
     document.getElementById('trigger-name').textContent = user.username || user.email;
     document.getElementById('trigger-email').textContent = user.email;
+
+    await loadUserLikes();
+    if (allWallpapers.length) {
+      displayWallpapers(allWallpapers);
+    }
 
     const profileAvatarImg = document.getElementById('profile-avatar');
     const profileLetterDiv = document.getElementById('profile-letter');
@@ -713,8 +714,7 @@ async function initializeApp() {
       } else if (action === 'favorites') {
         showPage('favorites-page');
       } else if (action === 'profile') {
-        viewingCreatorProfile = false;
-        showPage('profile-page');
+        showPage('my-uploads-page');
       }
     });
   });
@@ -797,7 +797,11 @@ async function initializeApp() {
   // ============ LOGOUT ============
   document.getElementById('logout-btn').addEventListener('click', async () => {
     localStorage.removeItem('user');
+    userLikes = new Set();
     displayAuthButtons();
+    if (allWallpapers.length) {
+      displayWallpapers(allWallpapers);
+    }
     document.getElementById('user-menu').classList.add('hidden');
   });
 

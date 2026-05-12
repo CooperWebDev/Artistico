@@ -1196,6 +1196,33 @@ form {
   color: #6b7280;
 }
 
+.trigger-avatar-container {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.trigger-avatar-container .avatar-letter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-letter {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
 .user-menu .menu-item {
   display: flex;
   align-items: center;
