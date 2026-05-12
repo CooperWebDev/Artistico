@@ -162,10 +162,6 @@
         <div></div>
       </div>
       <div class="upload-container">
-        <div class="upload-header">
-          <h2>Upload Your Wallpaper</h2>
-          <p>Share your favorite wallpapers with the community</p>
-        </div>
         <div id="upload-login-message" class="empty-state hidden">
           <p>You need to login to view this</p>
         </div>
@@ -294,24 +290,38 @@
       <div class="top-bar">
         <div></div>
       </div>
-      <div class="profile-section">
-        <h4>Profile Information</h4>
-        <div class="profile-avatar-section">
-          <img id="profile-avatar" src="" alt="Profile Avatar" class="profile-avatar">
+      <div id="profile-edit-section">
+        <div class="profile-section">
+          <h4>Profile Information</h4>
+          <div class="profile-avatar-section">
+            <img id="profile-avatar" src="" alt="Profile Avatar" class="profile-avatar">
+            <div>
+              <input type="text" id="profile-username-input" class="profile-username-input" placeholder="Username">
+              <p id="profile-email" class="profile-email"></p>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="profile-avatar-upload">Avatar</label>
+            <input type="file" id="profile-avatar-upload" accept="image/*">
+          </div>
+          <div class="form-group">
+            <label for="profile-bio">Bio</label>
+            <textarea id="profile-bio" placeholder="Tell us about yourself..." rows="3"></textarea>
+          </div>
+          <button class="btn btn-primary" id="save-profile-btn">Save Profile</button>
+        </div>
+      </div>
+      <div id="creator-profile-view" class="profile-section hidden">
+        <div class="creator-profile-card">
+          <img id="creator-view-avatar" src="https://via.placeholder.com/120?text=Avatar" alt="Creator Avatar" class="profile-avatar">
           <div>
-            <input type="text" id="profile-username-input" class="profile-username-input" placeholder="Username">
-            <p id="profile-email" class="profile-email"></p>
+            <h2 id="creator-view-name"></h2>
+            <p id="creator-view-email" class="profile-email"></p>
+            <p id="creator-view-bio"></p>
           </div>
         </div>
-        <div class="form-group">
-          <label for="profile-avatar-upload">Avatar</label>
-          <input type="file" id="profile-avatar-upload" accept="image/*">
-        </div>
-        <div class="form-group">
-          <label for="profile-bio">Bio</label>
-          <textarea id="profile-bio" placeholder="Tell us about yourself..." rows="3"></textarea>
-        </div>
-        <button class="btn btn-primary" id="save-profile-btn">Save Profile</button>
+        <h4>Creator's Wallpapers</h4>
+        <div id="creator-work-list" class="uploads-list"></div>
       </div>
     </section>
   </main>

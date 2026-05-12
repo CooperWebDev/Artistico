@@ -35,6 +35,7 @@ async function initializeApp() {
   let userLikes = new Set();
   let userMenuOpen = false;
   let activePage = 'home';
+  let viewingCreatorProfile = false;
 
   function updateNavbarTitle(pageId) {
     const titles = {
@@ -102,7 +103,23 @@ async function initializeApp() {
     });
     document.getElementById('user-menu')?.classList.add('hidden');
     userMenuOpen = false;
+    if (pageId !== 'profile-page') {
+      viewingCreatorProfile = false;
+    }
     activePage = pageId;
+
+    if (pageId === 'profile-page') {
+      const editSection = document.getElementById('profile-edit-section');
+      const creatorView = document.getElementById('creator-profile-view');
+      if (viewingCreatorProfile) {
+        editSection?.classList.add('hidden');
+        creatorView?.classList.remove('hidden');
+      } else {
+        editSection?.classList.remove('hidden');
+        creatorView?.classList.add('hidden');
+      }
+    }
+
     updateNavbarTitle(pageId);
     if (!handlePageAuth(pageId)) return;
 
@@ -407,19 +424,53 @@ async function initializeApp() {
 
     viewCreatorBtn.addEventListener('click', () => {
       modal.classList.add('hidden');
-      filterWallpapersByCreator(window.currentCreatorId);
+      if (window.currentCreatorId) {
+        showCreatorProfile(window.currentCreatorId);
+      }
     });
   }
 
-  function filterWallpapersByCreator(creatorId) {
-    const creatorWallpapers = allWallpapers.filter(w => w.user_id === creatorId);
-    if (creatorWallpapers.length === 0) {
-      document.getElementById('no-wallpapers').style.display = 'block';
-      document.getElementById('wallpapers').innerHTML = '';
-      return;
+  async function showCreatorProfile(creatorId) {
+    try {
+      const [{ data: creator, error: creatorError }, { data: wallpapers, error: wallpapersError }] = await Promise.all([
+        supabaseClient.from('user_profiles').select('*').eq('id', creatorId).single(),
+        supabaseClient.from('wallpapers').select('*').eq('user_id', creatorId).eq('is_public', true).order('created_at', { ascending: false }),
+      ]);
+
+      if (creatorError) throw creatorError;
+      if (wallpapersError) throw wallpapersError;
+
+      document.getElementById('creator-view-avatar').src = creator.avatar_url || 'https://via.placeholder.com/120?text=Avatar';
+      document.getElementById('creator-view-name').textContent = creator.username || creator.email;
+      document.getElementById('creator-view-email').textContent = creator.email;
+      document.getElementById('creator-view-bio').textContent = creator.bio || 'No bio provided.';
+
+      const creatorWorkList = document.getElementById('creator-work-list');
+      if (!wallpapers || wallpapers.length === 0) {
+        creatorWorkList.innerHTML = '<p class="empty-state">This creator has no public wallpapers yet.</p>';
+      } else {
+        creatorWorkList.innerHTML = wallpapers.map(wallpaper => `
+          <div class="upload-item">
+            <img src="${wallpaper.image_url}" alt="${wallpaper.title}" class="upload-thumbnail">
+            <div class="upload-info">
+              <h5>${wallpaper.title}</h5>
+              <p>${wallpaper.description || 'No description'}</p>
+              <small>Category: ${wallpaper.category || 'Uncategorized'} | Likes: ${wallpaper.likes_count || 0}</small>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      viewingCreatorProfile = true;
+      showPage('profile-page');
+    } catch (error) {
+      console.error('Error loading creator profile:', error);
+      alert('Unable to load creator profile right now.');
     }
-    displayWallpapers(creatorWallpapers);
-    showPage('home');
+  }
+
+  function filterWallpapersByCreator(creatorId) {
+    showCreatorProfile(creatorId);
   }
 
   // ============ FILTER WALLPAPERS ============
@@ -642,7 +693,8 @@ async function initializeApp() {
       } else if (action === 'favorites') {
         showPage('favorites-page');
       } else if (action === 'profile') {
-        showPage('my-uploads-page');
+        viewingCreatorProfile = false;
+        showPage('profile-page');
       }
     });
   });
@@ -835,6 +887,7 @@ async function initializeApp() {
 
   // My Uploads button in user menu
   document.getElementById('profile-menu-btn')?.addEventListener('click', () => {
+    viewingCreatorProfile = false;
     showPage('profile-page');
   });
 
