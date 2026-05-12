@@ -986,6 +986,21 @@ async function initializeApp() {
     }
     const user = JSON.parse(userData);
 
+    const { count: uploadCount, error: countError } = await supabaseClient
+      .from('wallpapers')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    if (countError) {
+      throw countError;
+    }
+
+    const maxUploads = 20;
+    if ((uploadCount || 0) >= maxUploads) {
+      alert(`You have reached the upload limit of ${maxUploads} wallpapers.`);
+      return;
+    }
+
     const file = fileInput.files[0];
     if (!file) {
       alert('Please select an image');

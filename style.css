@@ -161,6 +161,8 @@ img {
   grid-template-columns: 88px minmax(0, 1fr);
   gap: 1.5rem;
   padding: 1.5rem 2rem 2rem;
+  align-items: start;
+  min-height: calc(100vh - 7rem);
 }
 
 .sidebar {
@@ -169,6 +171,9 @@ img {
   align-items: center;
   gap: 1rem;
   padding: 1rem 0;
+  position: sticky;
+  top: 6rem;
+  align-self: start;
 }
 
 .sidebar-brand {
@@ -210,6 +215,8 @@ img {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  max-height: calc(100vh - 8rem);
+  overflow-y: auto;
 }
 
 .top-bar {
