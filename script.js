@@ -693,9 +693,6 @@ async function initializeApp() {
   }
 
   if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      filterWallpapers(this.value, activeFilter);
-    });
     searchInput.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         filterWallpapers(this.value, activeFilter);
