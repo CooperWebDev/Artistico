@@ -38,6 +38,7 @@ async function initializeApp() {
   let userMenuOpen = false;
   let activePage = 'home';
   let viewingCreatorProfile = false;
+  let activeFilter = 'all';
 
   function updateNavbarTitle(pageId) {
     const titles = {
