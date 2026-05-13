@@ -179,7 +179,6 @@ img {
   align-items: center;
   gap: 1rem;
   padding: 1rem 0;
-  position: sticky;
   top: 6rem;
   align-self: start;
 }
